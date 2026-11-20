@@ -1,6 +1,6 @@
 {
   "name": "@piro0919/image-to-pdf",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "dev": "pnpm build:lib && next dev",
@@ -50,7 +50,7 @@
     "type": "git",
     "url": "git+https://github.com/piro0919/image-to-pdf.git"
   },
-  "homepage": "https://github.com/piro0919/image-to-pdf#readme",
+  "homepage": "https://image-to-pdf.kkweb.io/",
   "keywords": [
     "ocr",
     "pdf",
