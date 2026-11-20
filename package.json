@@ -1,18 +1,61 @@
 {
   "name": "@piro0919/image-to-pdf",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "spike": "node --env-file-if-exists=.env spike/run.ts",
     "spike:sample": "node spike/make-sample.ts",
-    "typecheck": "tsc --noEmit"
+    "prepublishOnly": "pnpm typecheck && pnpm test && pnpm build"
   },
   "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.1"
+  },
+  "dependencies": {
     "@anthropic-ai/sdk": "^1.10.0",
     "@google/genai": "^3.6.1",
-    "@types/node": "^26.6.6",
-    "openai": "^7.60.0",
-    "typescript": "^7.0.2"
-  }
+    "openai": "^7.60.0"
+  },
+  "description": "Rebuild a photo of a paper document as a clean PDF with real text, tables and boxes, using Claude, OpenAI or Gemini with your own API key.",
+  "license": "MIT",
+  "author": "piro0919",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/piro0919/image-to-pdf.git"
+  },
+  "homepage": "https://github.com/piro0919/image-to-pdf#readme",
+  "keywords": [
+    "ocr",
+    "pdf",
+    "handwriting",
+    "document",
+    "llm",
+    "claude",
+    "openai",
+    "gemini"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "default": "./dist/node.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
 }

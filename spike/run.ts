@@ -1,27 +1,30 @@
-// 試作: 書類の写真 → AI → HTML → PDF
+// 試作: 書類の写真 → AI → HTML → PDF。パッケージ本体（src/）をそのまま使う
 // 使い方: pnpm spike <画像> [モデル...]
 //   モデルを省くと、.env にキーがある提供元のモデルをすべて流す
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { htmlToPdf } from "./chrome.ts";
-import { type Image, KEY_ENV, MODELS, type ModelKey, read } from "./providers.ts";
+import { type Provider, rebuild, writePdf } from "../src/node.ts";
 
 const JPY_PER_USD = 150;
 
-const SYSTEM = `You rebuild photographed paper documents as clean, printable HTML.
+// 料金は USD / 100万トークン。2026-11-20 に各社の料金表で確認
+// Gemini 3.8 Flash は 2026-12-31 までの値（2027-01-01 から $1.50 / $7.50）
+const MODELS = {
+  "claude-sonnet": { provider: "anthropic", id: "claude-sonnet-5-5", inUsd: 2, outUsd: 10 },
+  "claude-haiku": { provider: "anthropic", id: "claude-haiku-5-5", inUsd: 0.1, outUsd: 0.5 },
+  "openai-sol": { provider: "openai", id: "gpt-6.2-sol", inUsd: 2, outUsd: 10 },
+  "openai-luna": { provider: "openai", id: "gpt-6-luna", inUsd: 0.1, outUsd: 0.5 },
+  "gemini-flash": { provider: "google", id: "gemini-3.8-flash", inUsd: 0.75, outUsd: 3.75 },
+  "gemini-flash-lite": { provider: "google", id: "gemini-3.5-flash-lite", inUsd: 0.3, outUsd: 2.5 },
+} as const satisfies Record<string, { provider: Provider; id: string; inUsd: number; outUsd: number }>;
+type ModelKey = keyof typeof MODELS;
 
-The user sends a phone photo of one page. It may mix printed and handwritten text, in any language.
-Return one complete HTML document that, printed to A4, reproduces the original page:
-- The same text, transcribed exactly as written. Do not correct, summarise, translate or complete it.
-- The same layout: tables with the same rows, columns and merged cells; boxes; checkboxes and their state; headings; where blocks sit on the page (left, right, centred). Ignore the photo's tilt, shadows and background.
-- Set lang on <html>. For right-to-left scripts set dir="rtl", and wrap numbers, dates and units inside RTL text in <bdi dir="ltr">.
-- Use system font stacks only; no external resources, no scripts, no images.
-- Use @page { size: A4; margin: 15mm } and fit the page.
-- Where something cannot be read with confidence, write your best reading inside <mark class="unclear">…</mark>, and style .unclear so it stands out. Never invent text that is not there.
-- Stamps, seals and signatures: render their text if legible, with a thin border, and do not try to draw them.
-
-Reply with the HTML only, starting with <!doctype html>. No explanation, no code fences.`;
+const KEY_ENV: Record<Provider, string> = {
+  anthropic: "ANTHROPIC_API_KEY",
+  openai: "OPENAI_API_KEY",
+  google: "GEMINI_API_KEY",
+};
 
 const [imageArg, ...modelArgs] = process.argv.slice(2);
 const unknown = modelArgs.filter((m) => !(m in MODELS));
@@ -36,11 +39,7 @@ for (const k of keys.filter((k) => !runnable.includes(k))) {
 }
 
 const imagePath = path.resolve(imageArg);
-const ext = path.extname(imagePath).toLowerCase();
-const image: Image = {
-  data: readFileSync(imagePath).toString("base64"),
-  mediaType: ext === ".png" ? "image/png" : ext === ".webp" ? "image/webp" : "image/jpeg",
-};
+const photo = readFileSync(imagePath);
 const outDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "out");
 mkdirSync(outDir, { recursive: true });
 
@@ -49,24 +48,24 @@ await Promise.all(
     const model = MODELS[key];
     const started = Date.now();
     try {
-      const reading = await read(key, image, SYSTEM);
-      const html = reading.text
-        .trim()
-        .replace(/^```(?:html)?\s*/i, "")
-        .replace(/```$/, "")
-        .trim();
-      const base = path.join(outDir, `${path.basename(imagePath, ext)}-${key}`);
-      writeFileSync(`${base}.html`, html);
-      htmlToPdf(`${base}.html`, `${base}.pdf`);
-      const usd = (reading.inputTokens * model.inUsd + reading.outputTokens * model.outUsd) / 1_000_000;
-      const report = {
+      const result = await rebuild(photo, {
+        provider: model.provider,
         model: model.id,
+        apiKey: process.env[KEY_ENV[model.provider]] ?? "",
+      });
+      const base = path.join(outDir, `${path.basename(imagePath, path.extname(imagePath))}-${key}`);
+      writeFileSync(`${base}.html`, result.html);
+      await writePdf(result.html, `${base}.pdf`);
+      const { inputTokens, outputTokens } = result.usage;
+      const usd = (inputTokens * model.inUsd + outputTokens * model.outUsd) / 1_000_000;
+      const report = {
+        model: result.model,
         seconds: (Date.now() - started) / 1000,
-        input_tokens: reading.inputTokens,
-        output_tokens: reading.outputTokens,
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+        unclear: result.unclear,
         usd: Number(usd.toFixed(4)),
         jpy: Number((usd * JPY_PER_USD).toFixed(2)),
-        stop_reason: reading.stopReason,
       };
       writeFileSync(`${base}.json`, JSON.stringify(report, null, 2));
       console.log(`${base}.pdf`, report);
