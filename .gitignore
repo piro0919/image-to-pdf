@@ -3,3 +3,7 @@ node_modules/
 .env
 spike/out/
 dist/
+.next/
+next-env.d.ts
+.vercel/
+*.tsbuildinfo

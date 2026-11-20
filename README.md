@@ -65,8 +65,9 @@ await writePdf(result.html, "out.pdf");
 ### `rebuild(photo, options)`
 
 - `photo`: `Blob`, `File`, `ArrayBuffer` or any typed array. PNG, JPEG, WebP or GIF.
-  Photos whose base64 form is over 5 MB (the strictest provider limit found, Anthropic on Amazon Bedrock) are scaled down and
-  re-encoded as JPEG in the browser; in Node they are rejected, so resize them first
+  Photos whose base64 form is over 5 MB (the strictest provider limit found, Anthropic
+  on Amazon Bedrock) are scaled down and re-encoded as JPEG in the browser; in Node they
+  are rejected, so resize them first
 - `options.provider`: `"anthropic"`, `"openai"` or `"google"`
 - `options.apiKey`: API key for that provider
 - `options.model`: optional. Defaults to `DEFAULT_MODELS[provider]`

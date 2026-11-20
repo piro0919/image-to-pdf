@@ -8,7 +8,7 @@ Published as `@piro0919/image-to-pdf` on npm. The landing page doubles as the se
 anyone can use it there with their own API key.
 
 Agreed on 2026-11-20 in a sounding-board session started from the home directory.
-The package (`src/`) and a spike script (`spike/`) exist; the landing page does not.
+The package (`src/`), a spike script (`spike/`) and the landing page (`src/app/`) exist.
 The full discussion is in
 `~/.claude/projects/-Users-piro/b72ff8e7-8ec0-47af-a3ef-37bfd3015e6c.jsonl`.
 
@@ -91,7 +91,6 @@ Users pay this, not us, but it matters for which model to default to.
   compares Claude Sonnet 5.5 / Haiku 5.5, OpenAI `gpt-6.2-sol` / `gpt-6-luna`, and Gemini
   `gemini-3.8-flash` / `gemini-3.5-flash-lite`. Prices are in `spike/run.ts`.
   Whether the two OpenAI models accept images was not stated on OpenAI's pricing page
-- How the landing page is built and hosted
 
 ## Package API (agreed 2026-11-20)
 
@@ -128,14 +127,30 @@ were left to Claude by the owner ("すべてまかせる").
 - Large photos: Anthropic takes at most 10 MB of base64 per image on its own API and
   5 MB on Amazon Bedrock, with images up to 8000×8000 px (English vision docs,
   "Request limits", read 2026-11-20). Gemini 20 MB per request, OpenAI's limit was not
-  found. `encodePhoto` keeps everything under 5 MB, which leaves room under all of these: in the browser it scales down to JPEG (a 26 MB PNG became 2400×1800, 3.9 MB, in
-  Playwright's Chromium); Node has no canvas, so it throws instead
+  found. `encodePhoto` keeps everything under 5 MB, which leaves room under all of
+  these: in the browser it scales down to JPEG (a 26 MB PNG became 2400×1800, 3.9 MB,
+  in Playwright's Chromium); Node has no canvas, so it throws instead
 - The packed tarball type-checks from a consumer project under `nodenext` and `bundler`
   resolution. `src/` imports use `.js` because `.ts` paths leaked into the `.d.ts` files;
-  the spike therefore runs against `dist/` (`pnpm spike` builds first)
+  the spike therefore runs against `dist/` (`pnpm spike` builds first). The landing page
+  does the same: it imports `@piro0919/image-to-pdf` by name, which resolves to `dist/`
+  through the package's own `exports`. Turbopack does not map a `.js` import to a `.ts`
+  file, so importing `src/` directly fails to build
 - Competitors for the rebuild approach were only searched lightly. Several "image to Word"
   tools exist and some claim to rebuild tables (imagetotable.ai), untested. No tool for
   care workers was found
+
+## Landing page (agreed 2026-11-20)
+
+- Next.js in this repo (`src/app/`), published on Vercel at `image-to-pdf.kkweb.io`,
+  the same setup as the owner's other npm packages (use-pwa, next-unused,
+  unicode-range-split). Layout follows unicode-range-split and next-intl-alternates:
+  `npm i` line, heading, the working tool, a usage snippet, footer links
+- `pnpm dev` / `pnpm build` build the package first (`build:lib`), then Next.js
+- The page is static; the browser calls the provider directly, so no function region
+  to choose
+- Flow: provider, key, photo, "Rebuild", then "Save as PDF" calls `openPrint`. Printing
+  is a separate button rather than opening on its own after the model answers
 
 ## Conventions
 

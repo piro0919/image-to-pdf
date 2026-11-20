@@ -1,12 +1,19 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    // パッケージは NodeNext で出す。.d.ts の import を利用者の nodenext でも解決させるため
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2023", "DOM"],
     "noEmit": false,
+    "incremental": false,
     "allowImportingTsExtensions": false,
     "outDir": "dist",
     "rootDir": "src",
     "declaration": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "plugins": []
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/app"]
 }
