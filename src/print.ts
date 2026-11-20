@@ -1,4 +1,6 @@
-const FRAME_ATTR = "data-image-to-pdf-print";
+import { hidePrintHeaders } from "./html.js";
+
+const FRAME_ATTR ="data-image-to-pdf-print";
 
 /**
  * Browser only. Loads the HTML into a hidden, sandboxed frame and opens the print dialog,
@@ -16,7 +18,7 @@ export function openPrint(html: string): Promise<void> {
     frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
     // モデルの出力にスクリプトが混ざっても動かさない。印刷の画面を開くために allow-modals だけ許す
     frame.sandbox.add("allow-same-origin", "allow-modals");
-    frame.srcdoc = html;
+    frame.srcdoc = hidePrintHeaders(html);
     frame.onload = () => {
       const win = frame.contentWindow;
       if (!win) {

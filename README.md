@@ -118,6 +118,9 @@ Loads the HTML into a hidden, sandboxed frame and opens the print dialog. Resolv
 `print()` returns, which in some browsers is when the dialog closes and in others as soon
 as it opens.
 
+The browser's own headers and footers (date, title, page URL, page numbers) are left out
+of the printed page. This was checked in Chrome; Safari and Firefox are untested.
+
 ### `writePdf(html, path, { chromePath? })` (Node)
 
 Writes the HTML to a PDF file with a local headless Chrome.

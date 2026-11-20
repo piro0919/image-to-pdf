@@ -151,8 +151,16 @@ were left to Claude by the owner ("すべてまかせる").
 - `openPrint()`: in Playwright's Chromium no dialog appears and `afterprint` never fires.
   It resolves when `print()` returns and removes the frame on `afterprint` or on the next
   call, never on a timer, so a slow user cannot end up printing an emptied frame.
-  Whether the real dialog opens and prints the right page has not been seen in a normal
-  browser yet, and Safari is untested
+  In a normal Google Chrome (separate profile, driven over CDP, 2026-11-20) the
+  "Save as PDF" button opened Chrome's print preview showing the rebuilt document, not
+  the landing page. The destination defaulted to the system printer, so the user has to
+  pick "Save as PDF" there. Chrome's default headers and footers were on at first: the
+  date, the document title, `localhost:3020` and `1/1` printed in the margins.
+  `openPrint` now adds empty `@top-left` and `@bottom-left` page margin boxes
+  (`hidePrintHeaders` in `src/html.ts`); Chrome then prints none of them. Checked the same
+  day on a two-page document (both pages clean, the 15 mm `@page` margin kept) and through
+  the landing page's own button. Setting `@page { margin: 0 }` also hid them but lost the
+  margin on inner page edges. Safari and Firefox are untested
 - Large photos: Anthropic takes at most 10 MB of base64 per image on its own API and
   5 MB on Amazon Bedrock, with images up to 8000×8000 px (English vision docs,
   "Request limits", read 2026-11-20). Gemini 20 MB per request, OpenAI's limit was not

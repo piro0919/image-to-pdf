@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { cleanHtml, countUnclear } from "../src/html.js";
+import { cleanHtml, countUnclear, hidePrintHeaders } from "../src/html.js";
+
+describe("hidePrintHeaders", () => {
+  it("adds empty top and bottom margin boxes inside the head", () => {
+    const out = hidePrintHeaders("<html><head><style>@page { margin: 15mm }</style></HEAD><body>a</body></html>");
+    expect(out).toMatch(/@top-left \{ content: ""; \}.*@bottom-left \{ content: ""; \}.*<\/style><\/HEAD><body>/);
+    expect(out).toContain("@page { margin: 15mm }");
+  });
+
+  it("puts the rule first when the document has no head", () => {
+    expect(hidePrintHeaders("<p>a</p>")).toMatch(/^<style>@page \{.*<\/style><p>a<\/p>$/);
+  });
+});
 
 describe("cleanHtml", () => {
   it("leaves plain HTML alone", () => {
