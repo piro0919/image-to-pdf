@@ -4,7 +4,8 @@ export type EncodedImage = { data: string; mediaType: MediaType };
 /** Photo the caller passes in: a browser File or Blob, or raw bytes. */
 export type Photo = Blob | ArrayBuffer | ArrayBufferView;
 
-// Anthropic は画像1枚を base64 で 5MB までしか受け付けない。3社で最も厳しいのでこれに合わせる
+// Anthropic の上限は画像1枚 base64 で 10MB（自社 API）、Amazon Bedrock 経由なら 5MB。
+// 確かめた中で最も厳しい 5MB に合わせる
 export const MAX_BASE64_BYTES = 5 * 1024 * 1024;
 
 // 中身の先頭のバイトで形式を見分ける。ファイル名や Blob.type は当てにしない

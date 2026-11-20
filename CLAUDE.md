@@ -125,9 +125,10 @@ were left to Claude by the owner ("すべてまかせる").
   call, never on a timer, so a slow user cannot end up printing an emptied frame.
   Whether the real dialog opens and prints the right page has not been seen in a normal
   browser yet, and Safari is untested
-- Large photos: Anthropic takes at most 5 MB of base64 per image (vision docs), Gemini
-  20 MB per request, OpenAI's limit was not found. `encodePhoto` keeps everything under
-  5 MB: in the browser it scales down to JPEG (a 26 MB PNG became 2400×1800, 3.9 MB, in
+- Large photos: Anthropic takes at most 10 MB of base64 per image on its own API and
+  5 MB on Amazon Bedrock, with images up to 8000×8000 px (English vision docs,
+  "Request limits", read 2026-11-20). Gemini 20 MB per request, OpenAI's limit was not
+  found. `encodePhoto` keeps everything under 5 MB, which leaves room under all of these: in the browser it scales down to JPEG (a 26 MB PNG became 2400×1800, 3.9 MB, in
   Playwright's Chromium); Node has no canvas, so it throws instead
 - The packed tarball type-checks from a consumer project under `nodenext` and `bundler`
   resolution. `src/` imports use `.js` because `.ts` paths leaked into the `.d.ts` files;
