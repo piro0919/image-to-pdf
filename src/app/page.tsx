@@ -1,5 +1,8 @@
 import RebuildForm from "./_components/rebuild-form";
 
+const INSTALL = `npm i @piro0919/image-to-pdf
+npm i openai # or @anthropic-ai/sdk, @google/genai — only the ones you use`;
+
 const USAGE = `import { openPrint, rebuild } from "@piro0919/image-to-pdf";
 
 const { html, unclear, usage } = await rebuild(file, {
@@ -8,6 +11,25 @@ const { html, unclear, usage } = await rebuild(file, {
 });
 
 await openPrint(html); // opens the print dialog; choose "Save as PDF"`;
+
+const CLIENT = `import OpenAI from "openai";
+
+// Your own key stays on your server: point the SDK at your proxy
+const client = new OpenAI({
+  baseURL: "/api/openai",
+  apiKey: "unused",
+  dangerouslyAllowBrowser: true,
+});
+
+const { html } = await rebuild(file, { provider: "openai", client });`;
+
+function Code({ children }: { children: string }) {
+  return (
+    <pre className="overflow-x-auto rounded-xl border border-white/10 bg-[#11151a] p-5 font-mono text-[13px] leading-relaxed text-zinc-300">
+      <code>{children}</code>
+    </pre>
+  );
+}
 
 export default function Home() {
   return (
@@ -36,9 +58,11 @@ export default function Home() {
           <h2 className="font-display text-xl font-bold text-white">
             Use it in your own app
           </h2>
-          <pre className="mt-6 overflow-x-auto rounded-xl border border-white/10 bg-[#11151a] p-5 font-mono text-[13px] leading-relaxed text-zinc-300">
-            <code>{USAGE}</code>
-          </pre>
+          <div className="mt-6 space-y-8">
+            <Code>{INSTALL}</Code>
+            <Code>{USAGE}</Code>
+            <Code>{CLIENT}</Code>
+          </div>
         </section>
 
         <footer className="mt-20 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/10 pt-8 font-mono text-sm text-zinc-500">
