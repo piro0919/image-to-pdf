@@ -12,7 +12,8 @@
     "spike": "pnpm build:lib && node --env-file-if-exists=.env spike/run.ts",
     "spike:sample": "pnpm build:lib && node spike/make-sample.ts",
     "prepublishOnly": "pnpm typecheck && pnpm test && pnpm build:lib",
-    "lint": "eslint"
+    "lint": "eslint",
+    "format": "prettier --write ."
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",

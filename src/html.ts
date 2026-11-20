@@ -2,8 +2,8 @@
 export function cleanHtml(text: string): string {
   return text
     .trim()
-    .replace(/^```(?:html)?\s*/i, "")
-    .replace(/\s*```$/, "")
+    .replace(/^```(?:html)?\s*/i, '')
+    .replace(/\s*```$/, '')
     .trim();
 }
 
@@ -20,6 +20,8 @@ export function hidePrintHeaders(html: string): string {
 // <style> の中の .unclear は数えず、印を付けた <mark> だけを数える。class の値は引用符なしも許す
 export function countUnclear(html: string): number {
   return (
-    html.match(/<mark\b[^>]*\bclass\s*=\s*(?:"[^"]*\bunclear\b[^"]*"|'[^']*\bunclear\b[^']*'|unclear(?=[\s>/]))/gi)?.length ?? 0
+    html.match(
+      /<mark\b[^>]*\bclass\s*=\s*(?:"[^"]*\bunclear\b[^"]*"|'[^']*\bunclear\b[^']*'|unclear(?=[\s>/]))/gi,
+    )?.length ?? 0
   );
 }

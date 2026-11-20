@@ -1,4 +1,4 @@
-import RebuildForm from "./_components/rebuild-form";
+import RebuildForm from './_components/rebuild-form';
 
 const USAGE = `import { openPrint, rebuild } from "@piro0919/image-to-pdf";
 
@@ -37,10 +37,9 @@ export default function Home() {
             Photo in, typeset PDF out.
           </h1>
           <p className="mt-5 text-lg leading-relaxed text-zinc-400">
-            Turn a photo of a paper document into a clean PDF. The page is read
-            by an AI model and typeset again as real text, with its tables and
-            boxes laid out like the original. It is not the photo pasted into a
-            PDF.
+            Turn a photo of a paper document into a clean PDF. The page is read by an AI model and
+            typeset again as real text, with its tables and boxes laid out like the original. It is
+            not the photo pasted into a PDF.
           </p>
         </header>
 
@@ -49,9 +48,7 @@ export default function Home() {
         </section>
 
         <section className="mt-16">
-          <h2 className="font-display text-xl font-bold text-white">
-            Use it in your own app
-          </h2>
+          <h2 className="font-display text-xl font-bold text-white">Use it in your own app</h2>
           <div className="mt-6 space-y-8">
             <Code>{USAGE}</Code>
             <Code>{OWN_MODEL}</Code>
@@ -65,16 +62,10 @@ export default function Home() {
           >
             npm
           </a>
-          <a
-            className="hover:text-sky-300"
-            href="https://github.com/piro0919/image-to-pdf"
-          >
+          <a className="hover:text-sky-300" href="https://github.com/piro0919/image-to-pdf">
             GitHub
           </a>
-          <a
-            className="hover:text-sky-300"
-            href="https://buymeacoffee.com/piro0919"
-          >
+          <a className="hover:text-sky-300" href="https://buymeacoffee.com/piro0919">
             Buy Me a Coffee
           </a>
           <a className="hover:text-sky-300" href="https://kkweb.io/">

@@ -1,11 +1,24 @@
-import type { LanguageModel } from "ai";
-import { cleanHtml, countUnclear } from "./html.js";
-import { encodePhoto, type Photo } from "./image.js";
-import { callModel, DEFAULT_MODELS, type ModelIds, type Provider, providerModel, type Usage } from "./providers.js";
+import type { LanguageModel } from 'ai';
+import { cleanHtml, countUnclear } from './html.js';
+import { encodePhoto, type Photo } from './image.js';
+import {
+  callModel,
+  DEFAULT_MODELS,
+  type ModelIds,
+  type Provider,
+  providerModel,
+  type Usage,
+} from './providers.js';
 
-export { openPrint } from "./print.js";
-export { DEFAULT_MODELS, type ModelIds, type Provider, RebuildError, type Usage } from "./providers.js";
-export type { Photo } from "./image.js";
+export { openPrint } from './print.js';
+export {
+  DEFAULT_MODELS,
+  type ModelIds,
+  type Provider,
+  RebuildError,
+  type Usage,
+} from './providers.js';
+export type { Photo } from './image.js';
 
 type ProviderOptions<P extends Provider> = {
   provider: P;
@@ -45,7 +58,11 @@ export async function rebuild(photo: Photo, options: RebuildOptions): Promise<Re
   const model =
     options.provider === undefined
       ? options.model
-      : await providerModel(options.provider, options.model ?? DEFAULT_MODELS[options.provider], options.apiKey);
+      : await providerModel(
+          options.provider,
+          options.model ?? DEFAULT_MODELS[options.provider],
+          options.apiKey,
+        );
   const { text, usage, model: wrote } = await callModel(model, image, options.signal);
   const html = cleanHtml(text);
   return { html, unclear: countUnclear(html), usage, model: wrote };

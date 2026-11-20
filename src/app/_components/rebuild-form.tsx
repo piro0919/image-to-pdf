@@ -1,24 +1,19 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import {
-  openPrint,
-  type Provider,
-  type RebuildResult,
-  rebuild,
-} from "@piro0919/image-to-pdf";
+import { useState } from 'react';
+import { openPrint, type Provider, type RebuildResult, rebuild } from '@piro0919/image-to-pdf';
 
 const PROVIDERS: { id: Provider; label: string }[] = [
-  { id: "anthropic", label: "Claude" },
-  { id: "openai", label: "OpenAI" },
-  { id: "google", label: "Gemini" },
+  { id: 'anthropic', label: 'Claude' },
+  { id: 'openai', label: 'OpenAI' },
+  { id: 'google', label: 'Gemini' },
 ];
 
 // 試作（spike/run.ts）で比べた各社の上位と下位。先頭がパッケージの既定
 const MODELS: Record<Provider, string[]> = {
-  anthropic: ["claude-sonnet-5-5", "claude-haiku-5-5"],
-  openai: ["gpt-6.2-sol", "gpt-6-luna"],
-  google: ["gemini-3.8-flash", "gemini-3.5-flash-lite"],
+  anthropic: ['claude-sonnet-5-5', 'claude-haiku-5-5'],
+  openai: ['gpt-6.2-sol', 'gpt-6-luna'],
+  google: ['gemini-3.8-flash', 'gemini-3.5-flash-lite'],
 };
 
 // 返事を読めなかった失敗は、ブラウザが fetch の TypeError で知らせる（"Failed to fetch" など）
@@ -54,9 +49,7 @@ function Band<T extends string>({
         <button
           aria-checked={value === option.id}
           className={`flex-1 rounded-md px-3 py-2 text-sm transition-colors ${
-            value === option.id
-              ? "bg-sky-400/15 text-sky-200"
-              : "text-zinc-400 hover:text-zinc-200"
+            value === option.id ? 'bg-sky-400/15 text-sky-200' : 'text-zinc-400 hover:text-zinc-200'
           }`}
           key={option.id}
           onClick={() => onChange(option.id)}
@@ -71,15 +64,15 @@ function Band<T extends string>({
 }
 
 export default function RebuildForm() {
-  const [provider, setProvider] = useState<Provider>("anthropic");
-  const [model, setModel] = useState(MODELS.anthropic[0] ?? "");
-  const [apiKey, setApiKey] = useState("");
+  const [provider, setProvider] = useState<Provider>('anthropic');
+  const [model, setModel] = useState(MODELS.anthropic[0] ?? '');
+  const [apiKey, setApiKey] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<RebuildResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const label = PROVIDERS.find((p) => p.id === provider)?.label ?? "";
+  const label = PROVIDERS.find((p) => p.id === provider)?.label ?? '';
 
   async function run() {
     if (!photo || !apiKey) return;
@@ -87,9 +80,7 @@ export default function RebuildForm() {
     setResult(null);
     setError(null);
     try {
-      setResult(
-        await rebuild(photo, { provider, model, apiKey: apiKey.trim() }),
-      );
+      setResult(await rebuild(photo, { provider, model, apiKey: apiKey.trim() }));
     } catch (cause) {
       setError(describeError(cause, label));
     } finally {
@@ -103,7 +94,7 @@ export default function RebuildForm() {
         label="Provider"
         onChange={(next) => {
           setProvider(next);
-          setModel(MODELS[next][0] ?? "");
+          setModel(MODELS[next][0] ?? '');
         }}
         options={PROVIDERS}
         value={provider}
@@ -128,14 +119,13 @@ export default function RebuildForm() {
           value={apiKey}
         />
         <p className="mt-2 text-xs text-zinc-500">
-          Your key goes from this browser straight to {label}. It is not
-          stored.
+          Your key goes from this browser straight to {label}. It is not stored.
         </p>
       </div>
 
       <label className="flex cursor-pointer items-center justify-between gap-4 rounded-lg border border-dashed border-white/15 px-4 py-3 text-sm transition-colors hover:border-sky-400/40">
-        <span className={photo ? "truncate text-zinc-200" : "text-zinc-500"}>
-          {photo ? photo.name : "Choose a photo"}
+        <span className={photo ? 'truncate text-zinc-200' : 'text-zinc-500'}>
+          {photo ? photo.name : 'Choose a photo'}
         </span>
         <input
           accept="image/*"
@@ -155,7 +145,7 @@ export default function RebuildForm() {
           onClick={run}
           type="button"
         >
-          {running ? "Rebuilding" : "Rebuild"}
+          {running ? 'Rebuilding' : 'Rebuild'}
         </button>
         {result ? (
           <button
@@ -180,9 +170,7 @@ export default function RebuildForm() {
         </dl>
       ) : null}
 
-      {error ? (
-        <p className="text-sm break-words text-red-300">{error}</p>
-      ) : null}
+      {error ? <p className="text-sm break-words text-red-300">{error}</p> : null}
     </div>
   );
 }
@@ -191,7 +179,7 @@ function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div>
       <dt className="text-xs text-zinc-500">{label}</dt>
-      <dd className="text-lg text-zinc-100">{value.toLocaleString("en-US")}</dd>
+      <dd className="text-lg text-zinc-100">{value.toLocaleString('en-US')}</dd>
     </div>
   );
 }

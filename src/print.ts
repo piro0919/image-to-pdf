@@ -1,6 +1,6 @@
-import { hidePrintHeaders } from "./html.js";
+import { hidePrintHeaders } from './html.js';
 
-const FRAME_ATTR ="data-image-to-pdf-print";
+const FRAME_ATTR = 'data-image-to-pdf-print';
 
 /**
  * Browser only. Loads the HTML into a hidden, sandboxed frame and opens the print dialog,
@@ -12,22 +12,23 @@ export function openPrint(html: string): Promise<void> {
   for (const old of document.querySelectorAll(`iframe[${FRAME_ATTR}]`)) old.remove();
 
   return new Promise((resolve, reject) => {
-    const frame = document.createElement("iframe");
-    frame.setAttribute(FRAME_ATTR, "");
-    frame.setAttribute("aria-hidden", "true");
-    frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
+    const frame = document.createElement('iframe');
+    frame.setAttribute(FRAME_ATTR, '');
+    frame.setAttribute('aria-hidden', 'true');
+    frame.style.cssText =
+      'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
     // モデルの出力にスクリプトが混ざっても動かさない。印刷の画面を開くために allow-modals だけ許す
-    frame.sandbox.add("allow-same-origin", "allow-modals");
+    frame.sandbox.add('allow-same-origin', 'allow-modals');
     frame.srcdoc = hidePrintHeaders(html);
     frame.onload = () => {
       const win = frame.contentWindow;
       if (!win) {
         frame.remove();
-        reject(new Error("Could not open the print frame."));
+        reject(new Error('Could not open the print frame.'));
         return;
       }
       // print() がすぐ戻るブラウザで枠を先に外すと白紙になるので、外すのは afterprint か次の呼び出しで
-      win.addEventListener("afterprint", () => frame.remove(), { once: true });
+      win.addEventListener('afterprint', () => frame.remove(), { once: true });
       win.focus();
       win.print();
       resolve();

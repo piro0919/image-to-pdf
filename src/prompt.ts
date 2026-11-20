@@ -12,4 +12,4 @@ Return one complete HTML document that, printed to A4, reproduces the original p
 
 Reply with the HTML only, starting with <!doctype html>. No explanation, no code fences.`;
 
-export const USER_PROMPT = "Rebuild this page.";
+export const USER_PROMPT = 'Rebuild this page.';
