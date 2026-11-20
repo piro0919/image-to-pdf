@@ -193,7 +193,10 @@ were left to Claude by the owner ("すべてまかせる").
 - Published 2026-11-20 as the Vercel project `kkweb/image-to-pdf` (Git-connected, Node
   24.x). DNS: a CNAME `image-to-pdf` in Cloudflare, DNS only; the `_vercel` TXT was
   removed once the domain verified. GitHub's Website points at the domain. The project's
-  `image-to-pdf-phi-blond.vercel.app` domain has not been removed yet
+  `image-to-pdf-phi-blond.vercel.app` domain was removed the same day and now returns 404.
+  `vercel api ... -X DELETE` asks for confirmation, so it has to be run in a terminal by
+  the owner; the dashboard's domain list never loads in a Playwright window left in the
+  background
 - Icon (`src/app/icon.svg`): a tilted photo with a straight page rebuilt over it, chosen
   among three drafts by Claude ("まかせる"). The Open Graph card follows
   unicode-range-split's layout and draws its title in Newsreader from `assets/`
