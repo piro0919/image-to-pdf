@@ -80,6 +80,12 @@ Users pay this, not us, but it matters for which model to default to.
 - Accuracy. Not measured for any language. Needs sample photos with printed and handwritten
   text mixed; real documents are personal data, so the samples have to be made up.
   Anthropic's per-language scores measure text understanding, not reading handwriting
+  - First spike run, 2026-11-20, OpenAI only (no other keys yet), judged by eye against
+    the samples in `spike/samples/` (sources in `SOURCES.md`). `gpt-6.2-sol` kept the
+    layout of all four, including vertical Japanese handwriting and a ruled table, and
+    marked most doubtful spots as unclear. `gpt-6-luna` scrambled the vertical-writing
+    page and misread words and numbers without marking them (e.g. 青年勤勞隊 →
+    青年事業費隊, 五、一五 → 二一五). The cheap tier's real danger is confident wrong text
 - Default provider and model. The spike (`spike/`, `pnpm spike <image> [model...]`)
   compares Claude Sonnet 5.5 / Haiku 5.5, OpenAI `gpt-6.2-sol` / `gpt-6-luna`, and Gemini
   `gemini-3.8-flash` / `gemini-3.5-flash-lite`. Prices are in `spike/providers.ts`.
