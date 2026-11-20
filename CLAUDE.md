@@ -190,6 +190,13 @@ were left to Claude by the owner ("すべてまかせる").
 - `pnpm dev` / `pnpm build` build the package first (`build:lib`), then Next.js
 - The page is static; the browser calls the provider directly, so no function region
   to choose
+- Published 2026-11-20 as the Vercel project `kkweb/image-to-pdf` (Git-connected, Node
+  24.x). DNS: a CNAME `image-to-pdf` in Cloudflare, DNS only; the `_vercel` TXT was
+  removed once the domain verified. GitHub's Website points at the domain. The project's
+  `image-to-pdf-phi-blond.vercel.app` domain has not been removed yet
+- Icon (`src/app/icon.svg`): a tilted photo with a straight page rebuilt over it, chosen
+  among three drafts by Claude ("まかせる"). The Open Graph card follows
+  unicode-range-split's layout and draws its title in Newsreader from `assets/`
 - Flow: provider, key, photo, "Rebuild", then "Save as PDF" calls `openPrint`. Printing
   is a separate button rather than opening on its own after the model answers
 
