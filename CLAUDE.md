@@ -98,7 +98,12 @@ Implemented in `src/`. Names (`rebuild`, `openPrint`, `writePdf`) and the defaul
 were left to Claude by the owner ("すべてまかせる").
 
 - One call takes a photo (`File` / `Blob` in the browser, `Uint8Array` in Node) and
-  `{ provider, model?, apiKey }`, and returns `{ html, unclear, usage }`
+  `{ provider, model?, apiKey?, client? }`, and returns `{ html, unclear, usage }`
+  - `client` (added 2026-11-20 at the owner's request, "対応を"): the caller's own SDK
+    instance, so a proxy `baseURL` or custom `fetch` works and an app can keep its own
+    key off the browser. Typed by shape (`AnthropicClient` etc.), not by the SDK types,
+    so the published `.d.ts` does not need SDKs the consumer has not installed
+  - `apiKey` is optional because each SDK falls back to its environment variable in Node
   - `html`: a complete A4-printable document, the model's output used as is
   - `unclear`: how many spots the model marked with `<mark class="unclear">`
   - `usage`: input and output tokens, for showing the cost
@@ -113,6 +118,11 @@ were left to Claude by the owner ("すべてまかせる").
 - SDKs are loaded with dynamic `import()` so a browser bundle only fetches the provider
   in use. With esbuild code splitting each provider's chunk is about 1 MB unminified
   (measured 2026-11-20)
+- The three SDKs are optional `peerDependencies` (also in `devDependencies` for the
+  spike and the landing page). Without one installed, `rebuild` with only `apiKey` throws
+  "Install … or pass your own client"; with `client` the SDK is never imported. Checked
+  2026-11-20 from a packed tarball in a project with no SDKs: types pass under
+  `nodenext` with `skipLibCheck: false`, a passed client works
 
 ### Checked so far (2026-11-20)
 

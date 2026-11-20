@@ -27,6 +27,17 @@ medical or legal documents.
 npm install @piro0919/image-to-pdf
 ```
 
+Then install the SDK of each provider you use. They are optional peer dependencies, so
+you only get the ones you need:
+
+```sh
+npm install @anthropic-ai/sdk # Claude
+npm install openai            # OpenAI
+npm install @google/genai     # Gemini
+```
+
+If you pass your own `client` (see below), this package never imports the SDK itself.
+
 ## Browser
 
 ```ts
@@ -44,18 +55,33 @@ The browser calls the provider directly, so the key never passes through a serve
 yours. Anyone who can open the page's developer tools can see the key, so only use keys
 that belong to the person using the page.
 
+To use your own key from the browser without exposing it, send the request through your
+server by passing a client whose `baseURL` points there:
+
+```ts
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  baseURL: "/api/openai", // your proxy adds the key
+  apiKey: "unused",
+  dangerouslyAllowBrowser: true,
+});
+const { html } = await rebuild(file, { provider: "openai", client });
+```
+
 ## Node
 
 ```ts
 import { readFile } from "node:fs/promises";
 import { rebuild, writePdf } from "@piro0919/image-to-pdf/node";
 
-const result = await rebuild(await readFile("photo.jpg"), {
-  provider: "anthropic",
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-});
+// apiKey can be left out: the SDK reads ANTHROPIC_API_KEY
+const result = await rebuild(await readFile("photo.jpg"), { provider: "anthropic" });
 await writePdf(result.html, "out.pdf");
 ```
+
+Each SDK reads its usual variable: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or
+`GEMINI_API_KEY` / `GOOGLE_API_KEY`.
 
 `writePdf` needs Chrome, Chromium or Edge installed. Set `CHROME_PATH` or pass
 `{ chromePath }` if it is not found.
@@ -69,7 +95,11 @@ await writePdf(result.html, "out.pdf");
   on Amazon Bedrock) are scaled down and re-encoded as JPEG in the browser; in Node they
   are rejected, so resize them first
 - `options.provider`: `"anthropic"`, `"openai"` or `"google"`
-- `options.apiKey`: API key for that provider
+- `options.apiKey`: optional. API key for that provider. In Node, the SDK falls back to
+  its environment variable. Ignored when `client` is given
+- `options.client`: optional. An SDK client you built yourself (`new Anthropic()`,
+  `new OpenAI()`, `new GoogleGenAI()`), for a proxy `baseURL`, a custom `fetch` and so
+  on. Its settings are used as they are
 - `options.model`: optional. Defaults to `DEFAULT_MODELS[provider]`
 - `options.signal`: optional `AbortSignal`
 

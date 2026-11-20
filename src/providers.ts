@@ -16,7 +16,25 @@ export type Usage = { inputTokens: number; outputTokens: number };
 /** `model` is the model that actually wrote the page, which can differ from the one requested. */
 export type ProviderResult = { text: string; usage: Usage; model: string };
 
-type CallOptions = { model: string; apiKey: string; signal?: AbortSignal };
+// 利用者が組み立てた SDK の客体。中継・Azure・環境変数などの設定は利用者の側で済ませる
+// 公開の型に SDK の型を出さないため、使うメソッドがあることだけを形で見る
+// （SDK を入れていない提供元の型が、利用者の型検査で見つからなくなるのを避ける）
+type Method = (...args: never[]) => unknown;
+export type AnthropicClient = { beta: { messages: { stream: Method } } };
+export type OpenAIClient = { responses: { create: Method } };
+export type GoogleClient = { models: { generateContent: Method } };
+export type ProviderClients = { anthropic: AnthropicClient; openai: OpenAIClient; google: GoogleClient };
+
+type CallOptions = { model: string; apiKey?: string; client?: unknown; signal?: AbortSignal };
+
+// SDK は任意の peerDependencies。入っていないときは何を入れればよいかを言う
+async function load<T>(name: string, provider: Provider, loader: () => Promise<T>): Promise<T> {
+  try {
+    return await loader();
+  } catch (cause) {
+    throw new Error(`Install "${name}" to use the ${provider} provider, or pass your own client.`, { cause });
+  }
+}
 
 /** The model stopped without finishing the page (refused, ran out of tokens, blocked). */
 export class RebuildError extends Error {
@@ -30,9 +48,15 @@ export class RebuildError extends Error {
   }
 }
 
-async function callAnthropic(image: EncodedImage, { model, apiKey, signal }: CallOptions): Promise<ProviderResult> {
-  const { default: Anthropic } = await import("@anthropic-ai/sdk");
-  const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
+async function anthropicClient({ apiKey, client }: CallOptions): Promise<import("@anthropic-ai/sdk").default> {
+  if (client) return client as import("@anthropic-ai/sdk").default;
+  const { default: Anthropic } = await load("@anthropic-ai/sdk", "anthropic", () => import("@anthropic-ai/sdk"));
+  return new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
+}
+
+async function callAnthropic(image: EncodedImage, options: CallOptions): Promise<ProviderResult> {
+  const { model, signal } = options;
+  const client = await anthropicClient(options);
   const content = [
     { type: "image" as const, source: { type: "base64" as const, media_type: image.mediaType, data: image.data } },
     { type: "text" as const, text: USER_PROMPT },
@@ -59,9 +83,15 @@ async function callAnthropic(image: EncodedImage, { model, apiKey, signal }: Cal
   };
 }
 
-async function callOpenAI(image: EncodedImage, { model, apiKey, signal }: CallOptions): Promise<ProviderResult> {
-  const { default: OpenAI } = await import("openai");
-  const client = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+async function openAIClient({ apiKey, client }: CallOptions): Promise<import("openai").default> {
+  if (client) return client as import("openai").default;
+  const { default: OpenAI } = await load("openai", "openai", () => import("openai"));
+  return new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+}
+
+async function callOpenAI(image: EncodedImage, options: CallOptions): Promise<ProviderResult> {
+  const { model, signal } = options;
+  const client = await openAIClient(options);
   const response = await client.responses.create(
     {
       model,
@@ -90,9 +120,16 @@ async function callOpenAI(image: EncodedImage, { model, apiKey, signal }: CallOp
   };
 }
 
-async function callGoogle(image: EncodedImage, { model, apiKey, signal }: CallOptions): Promise<ProviderResult> {
-  const { GoogleGenAI } = await import("@google/genai");
-  const client = new GoogleGenAI({ apiKey });
+async function googleClient({ apiKey, client }: CallOptions): Promise<import("@google/genai").GoogleGenAI> {
+  if (client) return client as import("@google/genai").GoogleGenAI;
+  const { GoogleGenAI } = await load("@google/genai", "google", () => import("@google/genai"));
+  // キーを省くと SDK が環境変数 GEMINI_API_KEY / GOOGLE_API_KEY を読む
+  return new GoogleGenAI(apiKey ? { apiKey } : {});
+}
+
+async function callGoogle(image: EncodedImage, options: CallOptions): Promise<ProviderResult> {
+  const { model, signal } = options;
+  const client = await googleClient(options);
   const response = await client.models.generateContent({
     model,
     contents: [{ inlineData: { mimeType: image.mediaType, data: image.data } }, { text: USER_PROMPT }],

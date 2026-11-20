@@ -1,19 +1,38 @@
 import { cleanHtml, countUnclear } from "./html.js";
 import { encodePhoto, type Photo } from "./image.js";
-import { callProvider, DEFAULT_MODELS, type Provider, type Usage } from "./providers.js";
+import { callProvider, DEFAULT_MODELS, type Provider, type ProviderClients, type Usage } from "./providers.js";
 
 export { openPrint } from "./print.js";
-export { DEFAULT_MODELS, RebuildError, type Provider, type Usage } from "./providers.js";
+export {
+  type AnthropicClient,
+  DEFAULT_MODELS,
+  type GoogleClient,
+  type OpenAIClient,
+  type Provider,
+  type ProviderClients,
+  RebuildError,
+  type Usage,
+} from "./providers.js";
 export type { Photo } from "./image.js";
 
-export type RebuildOptions = {
-  provider: Provider;
-  /** The caller's own API key for that provider. */
-  apiKey: string;
+type OptionsFor<P extends Provider> = {
+  provider: P;
+  /**
+   * API key for that provider. Ignored when `client` is given. In Node it can be left out
+   * and the SDK reads its usual environment variable.
+   */
+  apiKey?: string;
+  /**
+   * An SDK client you built yourself (`new Anthropic()`, `new OpenAI()`, `new GoogleGenAI()`),
+   * for a proxy `baseURL`, a custom `fetch` and so on. Its options are used as they are.
+   */
+  client?: ProviderClients[P];
   /** Defaults to DEFAULT_MODELS[provider]. */
   model?: string;
   signal?: AbortSignal;
 };
+
+export type RebuildOptions = { [P in Provider]: OptionsFor<P> }[Provider];
 
 export type RebuildResult = {
   /** A complete HTML document, sized for A4. */
@@ -31,6 +50,7 @@ export async function rebuild(photo: Photo, options: RebuildOptions): Promise<Re
   const { text, usage, model } = await callProvider(options.provider, image, {
     model: options.model ?? DEFAULT_MODELS[options.provider],
     apiKey: options.apiKey,
+    client: options.client,
     signal: options.signal,
   });
   const html = cleanHtml(text);
