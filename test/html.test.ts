@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanHtml, countUnclear } from "../src/html.ts";
+import { cleanHtml, countUnclear } from "../src/html.js";
 
 describe("cleanHtml", () => {
   it("leaves plain HTML alone", () => {
@@ -19,7 +19,12 @@ describe("countUnclear", () => {
     expect(countUnclear(html)).toBe(2);
   });
 
+  it("counts an unquoted class value", () => {
+    expect(countUnclear(`<mark class=unclear>417</mark><mark class=unclear/>`)).toBe(2);
+  });
+
   it("ignores other marks and similar class names", () => {
+    expect(countUnclear(`<mark class=unclearly>y</mark>`)).toBe(0);
     expect(countUnclear(`<mark>x</mark><mark class="unclearly">y</mark><span class="unclear">z</span>`)).toBe(0);
   });
 });

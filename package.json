@@ -6,8 +6,8 @@
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "spike": "node --env-file-if-exists=.env spike/run.ts",
-    "spike:sample": "node spike/make-sample.ts",
+    "spike": "pnpm build && node --env-file-if-exists=.env spike/run.ts",
+    "spike:sample": "pnpm build && node spike/make-sample.ts",
     "prepublishOnly": "pnpm typecheck && pnpm test && pnpm build"
   },
   "devDependencies": {

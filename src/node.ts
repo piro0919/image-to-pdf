@@ -7,7 +7,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
-export * from "./index.ts";
+export * from "./index.js";
 
 const run = promisify(execFile);
 
@@ -17,10 +17,19 @@ const CANDIDATES: Partial<Record<NodeJS.Platform, string[]>> = {
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
     "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
   ],
-  linux: ["/usr/bin/google-chrome", "/usr/bin/google-chrome-stable", "/usr/bin/chromium", "/usr/bin/chromium-browser"],
+  linux: [
+    "/usr/bin/google-chrome",
+    "/usr/bin/google-chrome-stable",
+    "/usr/bin/chromium",
+    "/usr/bin/chromium-browser",
+    "/snap/bin/chromium",
+    "/usr/bin/microsoft-edge",
+  ],
   win32: [
     "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
     "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+    ...(process.env.LOCALAPPDATA ? [path.join(process.env.LOCALAPPDATA, "Google\\Chrome\\Application\\chrome.exe")] : []),
+    "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
     "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
   ],
 };
@@ -46,6 +55,8 @@ export async function writePdf(html: string, pdfPath: string, options: WritePdfO
       "--headless",
       "--disable-gpu",
       "--no-pdf-header-footer",
+      // Docker や CI で root のまま動かすと、Chrome はサンドボックス無しでないと起動しない
+      ...(process.getuid?.() === 0 ? ["--no-sandbox"] : []),
       `--user-data-dir=${path.join(dir, "profile")}`,
       `--print-to-pdf=${path.resolve(pdfPath)}`,
       pathToFileURL(htmlPath).href,

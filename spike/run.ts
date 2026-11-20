@@ -1,10 +1,10 @@
-// 試作: 書類の写真 → AI → HTML → PDF。パッケージ本体（src/）をそのまま使う
+// 試作: 書類の写真 → AI → HTML → PDF。ビルドしたパッケージ（dist/）をそのまま使う
 // 使い方: pnpm spike <画像> [モデル...]
 //   モデルを省くと、.env にキーがある提供元のモデルをすべて流す
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { type Provider, rebuild, writePdf } from "../src/node.ts";
+import { type Provider, rebuild, writePdf } from "../dist/node.js";
 
 const JPY_PER_USD = 150;
 

@@ -64,13 +64,17 @@ await writePdf(result.html, "out.pdf");
 
 ### `rebuild(photo, options)`
 
-- `photo`: `Blob`, `File`, `Uint8Array` or `ArrayBuffer`. PNG, JPEG, WebP or GIF
+- `photo`: `Blob`, `File`, `ArrayBuffer` or any typed array. PNG, JPEG, WebP or GIF.
+  Photos whose base64 form is over 5 MB (Anthropic's limit) are scaled down and
+  re-encoded as JPEG in the browser; in Node they are rejected, so resize them first
 - `options.provider`: `"anthropic"`, `"openai"` or `"google"`
 - `options.apiKey`: API key for that provider
 - `options.model`: optional. Defaults to `DEFAULT_MODELS[provider]`
 - `options.signal`: optional `AbortSignal`
 
-Returns `{ html, unclear, usage: { inputTokens, outputTokens }, model }`. Throws
+Returns `{ html, unclear, usage: { inputTokens, outputTokens }, model }`. `model` is the
+model that wrote the page; with Claude Sonnet the request can fall back to another model
+when it is declined, and `model` then names that one. Throws
 `RebuildError` (with `provider` and `reason`) when the model stops before finishing the
 page.
 
@@ -84,7 +88,9 @@ Default models:
 
 ### `openPrint(html)` (browser)
 
-Loads the HTML into a hidden, sandboxed frame and opens the print dialog.
+Loads the HTML into a hidden, sandboxed frame and opens the print dialog. Resolves when
+`print()` returns, which in some browsers is when the dialog closes and in others as soon
+as it opens.
 
 ### `writePdf(html, path, { chromePath? })` (Node)
 

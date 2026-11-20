@@ -1,7 +1,7 @@
 // 提供元ごとの呼び出し。どれも「画像を渡し、HTML の文字列とトークン数を返す」だけにそろえる
 // SDK は使う提供元の分だけ読み込む（ブラウザで3社分を抱えないため）
-import type { EncodedImage } from "./image.ts";
-import { SYSTEM_PROMPT, USER_PROMPT } from "./prompt.ts";
+import type { EncodedImage } from "./image.js";
+import { SYSTEM_PROMPT, USER_PROMPT } from "./prompt.js";
 
 export type Provider = "anthropic" | "openai" | "google";
 
@@ -13,7 +13,8 @@ export const DEFAULT_MODELS: Record<Provider, string> = {
 };
 
 export type Usage = { inputTokens: number; outputTokens: number };
-export type ProviderResult = { text: string; usage: Usage };
+/** `model` is the model that actually wrote the page, which can differ from the one requested. */
+export type ProviderResult = { text: string; usage: Usage; model: string };
 
 type CallOptions = { model: string; apiKey: string; signal?: AbortSignal };
 
@@ -44,12 +45,17 @@ async function callAnthropic(image: EncodedImage, { model, apiKey, signal }: Cal
       { signal },
     )
     .finalMessage();
-  if (message.stop_reason !== "end_turn") {
-    throw new RebuildError(`Claude stopped early: ${message.stop_reason}`, "anthropic", String(message.stop_reason));
+  // 途中で切れたものだけを失敗にする。end_turn 以外にも正常に終わる理由があるため
+  const stop = String(message.stop_reason);
+  if (["max_tokens", "refusal", "model_context_window_exceeded"].includes(stop)) {
+    throw new RebuildError(`Claude stopped early: ${stop}`, "anthropic", stop);
   }
+  // 別のモデルへ回ったときは、最後に引き継いだモデルが書いている
+  const handedTo = message.content.flatMap((b) => (b.type === "fallback" ? [b.to.model] : [])).at(-1);
   return {
     text: message.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join(""),
     usage: { inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens },
+    model: handedTo ?? message.model,
   };
 }
 
@@ -80,6 +86,7 @@ async function callOpenAI(image: EncodedImage, { model, apiKey, signal }: CallOp
     text: response.output_text,
     // output_tokens は推論のトークンを含む
     usage: { inputTokens: response.usage?.input_tokens ?? 0, outputTokens: response.usage?.output_tokens ?? 0 },
+    model: response.model,
   };
 }
 
@@ -104,6 +111,7 @@ async function callGoogle(image: EncodedImage, { model, apiKey, signal }: CallOp
       inputTokens: usage?.promptTokenCount ?? 0,
       outputTokens: (usage?.candidatesTokenCount ?? 0) + (usage?.thoughtsTokenCount ?? 0),
     },
+    model: response.modelVersion ?? model,
   };
 }
 

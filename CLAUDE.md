@@ -120,10 +120,18 @@ were left to Claude by the owner ("すべてまかせる").
 - Browser → OpenAI with a real key: works. Bundled `dist/` with esbuild, served on
   localhost, called `rebuild()` from Playwright's Chromium. Anthropic and Gemini have
   not been called from a browser (no keys yet)
-- `openPrint()`: in Playwright's Chromium no dialog appears and `afterprint` never fires,
-  so the frame stays until the one-minute fallback. Whether the real dialog opens and
-  prints the right page has not been seen in a normal browser yet, and Safari is
-  untested
+- `openPrint()`: in Playwright's Chromium no dialog appears and `afterprint` never fires.
+  It resolves when `print()` returns and removes the frame on `afterprint` or on the next
+  call, never on a timer, so a slow user cannot end up printing an emptied frame.
+  Whether the real dialog opens and prints the right page has not been seen in a normal
+  browser yet, and Safari is untested
+- Large photos: Anthropic takes at most 5 MB of base64 per image (vision docs), Gemini
+  20 MB per request, OpenAI's limit was not found. `encodePhoto` keeps everything under
+  5 MB: in the browser it scales down to JPEG (a 26 MB PNG became 2400×1800, 3.9 MB, in
+  Playwright's Chromium); Node has no canvas, so it throws instead
+- The packed tarball type-checks from a consumer project under `nodenext` and `bundler`
+  resolution. `src/` imports use `.js` because `.ts` paths leaked into the `.d.ts` files;
+  the spike therefore runs against `dist/` (`pnpm spike` builds first)
 - Competitors for the rebuild approach were only searched lightly. Several "image to Word"
   tools exist and some claim to rebuild tables (imagetotable.ai), untested. No tool for
   care workers was found

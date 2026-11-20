@@ -1,10 +1,10 @@
-import { cleanHtml, countUnclear } from "./html.ts";
-import { encodePhoto, type Photo } from "./image.ts";
-import { callProvider, DEFAULT_MODELS, type Provider, type Usage } from "./providers.ts";
+import { cleanHtml, countUnclear } from "./html.js";
+import { encodePhoto, type Photo } from "./image.js";
+import { callProvider, DEFAULT_MODELS, type Provider, type Usage } from "./providers.js";
 
-export { openPrint } from "./print.ts";
-export { DEFAULT_MODELS, RebuildError, type Provider, type Usage } from "./providers.ts";
-export type { Photo } from "./image.ts";
+export { openPrint } from "./print.js";
+export { DEFAULT_MODELS, RebuildError, type Provider, type Usage } from "./providers.js";
+export type { Photo } from "./image.js";
 
 export type RebuildOptions = {
   provider: Provider;
@@ -21,15 +21,15 @@ export type RebuildResult = {
   /** How many spots the model marked as hard to read (`<mark class="unclear">`). */
   unclear: number;
   usage: Usage;
+  /** The model that wrote the page. Can differ from the one requested when a provider falls back. */
   model: string;
 };
 
 /** Reads a photo of a paper document and rebuilds it as printable HTML. */
 export async function rebuild(photo: Photo, options: RebuildOptions): Promise<RebuildResult> {
-  const model = options.model ?? DEFAULT_MODELS[options.provider];
   const image = await encodePhoto(photo);
-  const { text, usage } = await callProvider(options.provider, image, {
-    model,
+  const { text, usage, model } = await callProvider(options.provider, image, {
+    model: options.model ?? DEFAULT_MODELS[options.provider],
     apiKey: options.apiKey,
     signal: options.signal,
   });
