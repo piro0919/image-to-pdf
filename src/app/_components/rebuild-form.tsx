@@ -14,8 +14,53 @@ const PROVIDERS: { id: Provider; label: string }[] = [
   { id: "google", label: "Gemini" },
 ];
 
+// 試作（spike/run.ts）で比べた各社の上位と下位。先頭がパッケージの既定
+const MODELS: Record<Provider, string[]> = {
+  anthropic: ["claude-sonnet-5-5", "claude-haiku-5-5"],
+  openai: ["gpt-6.2-sol", "gpt-6-luna"],
+  google: ["gemini-3.8-flash", "gemini-3.5-flash-lite"],
+};
+
+function Band<T extends string>({
+  label,
+  onChange,
+  options,
+  value,
+}: {
+  label: string;
+  onChange: (value: T) => void;
+  options: { id: T; label: string }[];
+  value: T;
+}) {
+  return (
+    <div
+      aria-label={label}
+      className="flex rounded-lg border border-white/10 bg-white/[0.03] p-1"
+      role="radiogroup"
+    >
+      {options.map((option) => (
+        <button
+          aria-checked={value === option.id}
+          className={`flex-1 rounded-md px-3 py-2 text-sm transition-colors ${
+            value === option.id
+              ? "bg-sky-400/15 text-sky-200"
+              : "text-zinc-400 hover:text-zinc-200"
+          }`}
+          key={option.id}
+          onClick={() => onChange(option.id)}
+          role="radio"
+          type="button"
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function RebuildForm() {
   const [provider, setProvider] = useState<Provider>("anthropic");
+  const [model, setModel] = useState(MODELS.anthropic[0] ?? "");
   const [apiKey, setApiKey] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
   const [running, setRunning] = useState(false);
@@ -30,7 +75,9 @@ export default function RebuildForm() {
     setResult(null);
     setError(null);
     try {
-      setResult(await rebuild(photo, { provider, apiKey: apiKey.trim() }));
+      setResult(
+        await rebuild(photo, { provider, model, apiKey: apiKey.trim() }),
+      );
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
@@ -40,28 +87,22 @@ export default function RebuildForm() {
 
   return (
     <div className="space-y-5">
-      <div
-        aria-label="Provider"
-        className="flex rounded-lg border border-white/10 bg-white/[0.03] p-1"
-        role="radiogroup"
-      >
-        {PROVIDERS.map((p) => (
-          <button
-            aria-checked={provider === p.id}
-            className={`flex-1 rounded-md px-3 py-2 text-sm transition-colors ${
-              provider === p.id
-                ? "bg-sky-400/15 text-sky-200"
-                : "text-zinc-400 hover:text-zinc-200"
-            }`}
-            key={p.id}
-            onClick={() => setProvider(p.id)}
-            role="radio"
-            type="button"
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
+      <Band
+        label="Provider"
+        onChange={(next) => {
+          setProvider(next);
+          setModel(MODELS[next][0] ?? "");
+        }}
+        options={PROVIDERS}
+        value={provider}
+      />
+
+      <Band
+        label="Model"
+        onChange={setModel}
+        options={MODELS[provider].map((id) => ({ id, label: id }))}
+        value={model}
+      />
 
       <div>
         <input

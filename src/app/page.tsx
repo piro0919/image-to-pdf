@@ -6,8 +6,9 @@ npm i openai # or @anthropic-ai/sdk, @google/genai — only the ones you use`;
 const USAGE = `import { openPrint, rebuild } from "@piro0919/image-to-pdf";
 
 const { html, unclear, usage } = await rebuild(file, {
-  provider: "openai", // "anthropic" | "openai" | "google"
-  apiKey,             // the user's own key
+  provider: "openai",    // "anthropic" | "openai" | "google"
+  apiKey,                // the user's own key
+  model: "gpt-6.2-sol",  // optional; defaults to DEFAULT_MODELS[provider]
 });
 
 await openPrint(html); // opens the print dialog; choose "Save as PDF"`;
