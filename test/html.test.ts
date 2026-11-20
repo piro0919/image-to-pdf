@@ -12,6 +12,11 @@ describe('hidePrintHeaders', () => {
     expect(out).toContain('@page { margin: 15mm }');
   });
 
+  it('keeps the doctype first when the document leaves out </head>', () => {
+    const out = hidePrintHeaders('<!doctype html><html lang="ja"><body>a</body></html>');
+    expect(out).toMatch(/^<!doctype html><style>@page \{.*<\/style><html lang="ja">/);
+  });
+
   it('puts the rule first when the document has no head', () => {
     expect(hidePrintHeaders('<p>a</p>')).toMatch(/^<style>@page \{.*<\/style><p>a<\/p>$/);
   });

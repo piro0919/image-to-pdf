@@ -50,8 +50,16 @@ describe('rebuild with an AI SDK model', () => {
   });
 
   it("turns on Anthropic's server-side fallback, except for Haiku", async () => {
-    const sonnet = new MockLanguageModelV4({ modelId: 'claude-sonnet-5-5', doGenerate: answer() });
-    const haiku = new MockLanguageModelV4({ modelId: 'claude-haiku-5-5', doGenerate: answer() });
+    const sonnet = new MockLanguageModelV4({
+      provider: 'anthropic.messages',
+      modelId: 'claude-sonnet-5-5',
+      doGenerate: answer(),
+    });
+    const haiku = new MockLanguageModelV4({
+      provider: 'anthropic.messages',
+      modelId: 'claude-haiku-5-5',
+      doGenerate: answer(),
+    });
 
     await rebuild(png, { model: sonnet });
     await rebuild(png, { model: haiku });
@@ -60,6 +68,31 @@ describe('rebuild with an AI SDK model', () => {
       anthropic: { fallbacks: 'default' },
     });
     expect(haiku.doGenerateCalls[0]?.providerOptions?.anthropic).toBeUndefined();
+  });
+
+  it('keeps Anthropic-only options away from Claude on other platforms', async () => {
+    const bedrock = new MockLanguageModelV4({
+      provider: 'bedrock.anthropic',
+      modelId: 'us.anthropic.claude-sonnet-5-5',
+      doGenerate: answer(),
+    });
+
+    await rebuild(png, { model: bedrock });
+
+    expect(bedrock.doGenerateCalls[0]?.providerOptions?.anthropic).toBeUndefined();
+    expect(bedrock.doGenerateCalls[0]?.maxOutputTokens).toBeUndefined();
+  });
+
+  it('gives Anthropic room for a full page even for a model ID the package does not know', async () => {
+    const model = new MockLanguageModelV4({
+      provider: 'anthropic.messages',
+      modelId: 'claude-sonnet-9',
+      doGenerate: answer(),
+    });
+
+    await rebuild(png, { model });
+
+    expect(model.doGenerateCalls[0]?.maxOutputTokens).toBe(64_000);
   });
 
   it('names the model a fallback handed the page to', async () => {
@@ -95,5 +128,19 @@ describe('rebuild with an AI SDK model', () => {
 
     await expect(rebuild(png, { model })).rejects.toBeInstanceOf(RebuildError);
     await expect(rebuild(png, { model })).rejects.toMatchObject({ reason: 'max_tokens' });
+  });
+
+  it('throws RebuildError when the model stopped for a reason the SDK does not name', async () => {
+    const model = new MockLanguageModelV4({
+      doGenerate: answer({ finishReason: { unified: 'other', raw: 'OTHER' } }),
+    });
+
+    await expect(rebuild(png, { model })).rejects.toMatchObject({ reason: 'OTHER' });
+  });
+
+  it('throws RebuildError when the model finished without writing a page', async () => {
+    const model = new MockLanguageModelV4({ doGenerate: answer({ content: [] }) });
+
+    await expect(rebuild(png, { model })).rejects.toMatchObject({ reason: 'empty' });
   });
 });

@@ -73,18 +73,27 @@ function modelIdOf(model: LanguageModel): string {
   return typeof model === 'string' ? model : model.modelId;
 }
 
-// 安全の判定で断られたときに、Anthropic のサーバー側で別のモデルへ回す。Haiku には無い
-// 他社のモデルでは anthropic の設定は読まれない
+// Anthropic の自社 API に直接つなぐモデルか。Bedrock・Vertex・gateway 経由のものは含めない
+function isAnthropicApi(model: LanguageModel): boolean {
+  return typeof model !== 'string' && model.provider.startsWith('anthropic.');
+}
+
+// 安全の判定で断られたときに、Anthropic のサーバー側で別のモデルへ回す。Haiku には無い。
+// Bedrock などがこの設定を受け付けるかは確かめていないので、自社 API のときだけ付ける
 function fallbackOptions(
   model: LanguageModel,
 ): { anthropic: { fallbacks: 'default' } } | undefined {
-  return modelIdOf(model).includes('claude-haiku')
-    ? undefined
-    : { anthropic: { fallbacks: 'default' } };
+  return isAnthropicApi(model) && !modelIdOf(model).includes('claude-haiku')
+    ? { anthropic: { fallbacks: 'default' } }
+    : undefined;
 }
 
-// 途中で切れたものだけを失敗にする
-const FAILED = new Set(['length', 'content-filter', 'error']);
+// @ai-sdk/anthropic は、知らないモデル名だと出力の上限を 4096 にする（4.0.106 の実装）。
+// 表の多いページは収まらないので、AI SDK に載せ替える前と同じ値を渡す。知っているモデルでは、その上限まで下げられる
+const ANTHROPIC_MAX_OUTPUT_TOKENS = 64_000;
+
+// 書き終えた（stop）もの以外は失敗にする。'other' は Gemini の OTHER や、AI SDK が知らない止まり方
+const FAILED = new Set(['length', 'content-filter', 'error', 'other']);
 
 export async function callModel(
   model: LanguageModel,
@@ -111,6 +120,7 @@ export async function callModel(
       },
     ],
     providerOptions: fallbackOptions(model),
+    maxOutputTokens: isAnthropicApi(model) ? ANTHROPIC_MAX_OUTPUT_TOKENS : undefined,
     abortSignal: signal,
   });
 
@@ -118,6 +128,9 @@ export async function callModel(
   if (FAILED.has(result.finishReason)) {
     const reason = result.rawFinishReason ?? result.finishReason;
     throw new RebuildError(`The model stopped early: ${reason}`, provider, reason);
+  }
+  if (!result.text.trim()) {
+    throw new RebuildError('The model returned no page.', provider, 'empty');
   }
 
   // Anthropic で別のモデルへ回ったときは、最後に引き継いだモデルが書いている

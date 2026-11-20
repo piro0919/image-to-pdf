@@ -11,10 +11,14 @@ export function cleanHtml(text: string): string {
 // （2026-11-20 に Chrome で、上下とも置けば2ページとも消え、@page の余白はそのまま残ることを確かめた）
 const NO_PRINT_HEADERS = `<style>@page { @top-left { content: ""; } @bottom-left { content: ""; } }</style>`;
 
+// <!doctype> より前に何か置くとブラウザが互換モードで描き、表や枠の寸法が変わる。
+// head の閉じタグを省いた文書では、doctype の直後に入れる
 export function hidePrintHeaders(html: string): string {
-  return /<\/head>/i.test(html)
-    ? html.replace(/<\/head>/i, `${NO_PRINT_HEADERS}$&`)
-    : `${NO_PRINT_HEADERS}${html}`;
+  if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `${NO_PRINT_HEADERS}$&`);
+  const doctype = /^\s*<!doctype[^>]*>/i.exec(html);
+  if (!doctype) return `${NO_PRINT_HEADERS}${html}`;
+  const end = doctype[0].length;
+  return `${html.slice(0, end)}${NO_PRINT_HEADERS}${html.slice(end)}`;
 }
 
 // <style> の中の .unclear は数えず、印を付けた <mark> だけを数える。class の値は引用符なしも許す

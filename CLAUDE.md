@@ -173,6 +173,10 @@ were left to Claude by the owner ("すべてまかせる").
   does the same: it imports `@piro0919/image-to-pdf` by name, which resolves to `dist/`
   through the package's own `exports`. Turbopack does not map a `.js` import to a `.ts`
   file, so importing `src/` directly fails to build
+- EXIF orientation: photos under the size limit are sent as they are, orientation tag
+  included; only the shrink path redraws them upright. A JPEG stored sideways with
+  Orientation=6 was read correctly by `gpt-6-luna` (2026-11-20). Whether it applied the
+  tag or read the sideways page cannot be told apart. Claude and Gemini are untested
 - Competitors for the rebuild approach were only searched lightly. Several "image to Word"
   tools exist and some claim to rebuild tables (imagetotable.ai), untested. No tool for
   care workers was found

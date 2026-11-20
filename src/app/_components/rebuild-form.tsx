@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { openPrint, type Provider, type RebuildResult, rebuild } from '@piro0919/image-to-pdf';
 
 const PROVIDERS: { id: Provider; label: string }[] = [
@@ -71,20 +71,41 @@ export default function RebuildForm() {
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<RebuildResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // 読み取りの途中で写真・提供元・モデルを変えたら、その読み取りを止めて結果を捨てる。
+  // 捨てないと、前の写真の結果が新しい写真の名前の横に出て、そのまま PDF にできてしまう
+  const pending = useRef<AbortController | null>(null);
 
   const label = PROVIDERS.find((p) => p.id === provider)?.label ?? '';
 
-  async function run() {
-    if (!photo || !apiKey) return;
-    setRunning(true);
+  function reset() {
+    pending.current?.abort();
+    pending.current = null;
+    setRunning(false);
     setResult(null);
     setError(null);
+  }
+
+  async function run() {
+    if (!photo || !apiKey) return;
+    reset();
+    const controller = new AbortController();
+    pending.current = controller;
+    setRunning(true);
     try {
-      setResult(await rebuild(photo, { provider, model, apiKey: apiKey.trim() }));
+      const next = await rebuild(photo, {
+        provider,
+        model,
+        apiKey: apiKey.trim(),
+        signal: controller.signal,
+      });
+      if (!controller.signal.aborted) setResult(next);
     } catch (cause) {
-      setError(describeError(cause, label));
+      if (!controller.signal.aborted) setError(describeError(cause, label));
     } finally {
-      setRunning(false);
+      if (pending.current === controller) {
+        pending.current = null;
+        setRunning(false);
+      }
     }
   }
 
@@ -93,6 +114,7 @@ export default function RebuildForm() {
       <Band
         label="Provider"
         onChange={(next) => {
+          reset();
           setProvider(next);
           setModel(MODELS[next][0] ?? '');
         }}
@@ -102,7 +124,10 @@ export default function RebuildForm() {
 
       <Band
         label="Model"
-        onChange={setModel}
+        onChange={(next) => {
+          reset();
+          setModel(next);
+        }}
         options={MODELS[provider].map((id) => ({ id, label: id }))}
         value={model}
       />
@@ -128,11 +153,12 @@ export default function RebuildForm() {
           {photo ? photo.name : 'Choose a photo'}
         </span>
         <input
-          accept="image/*"
+          // パッケージが読める形式だけを選べるようにする。HEIC などは選んでから断られるより、最初から選べないほうがよい
+          accept="image/png,image/jpeg,image/webp,image/gif"
           className="sr-only"
           onChange={(event) => {
+            reset();
             setPhoto(event.target.files?.[0] ?? null);
-            setResult(null);
           }}
           type="file"
         />
