@@ -7,7 +7,7 @@
     "build": "pnpm build:lib && next build",
     "start": "next start",
     "build:lib": "rm -rf dist && tsc -p tsconfig.build.json",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "pnpm build:lib && tsc --noEmit",
     "test": "vitest run",
     "spike": "pnpm build:lib && node --env-file-if-exists=.env spike/run.ts",
     "spike:sample": "pnpm build:lib && node spike/make-sample.ts",
