@@ -14,36 +14,17 @@
     "prepublishOnly": "pnpm typecheck && pnpm test && pnpm build:lib"
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^1.10.0",
-    "@google/genai": "^3.6.1",
     "@tailwindcss/postcss": "^4.3.5",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vercel/analytics": "^2.0.1",
     "next": "^16.4.6",
-    "openai": "^7.60.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "tailwindcss": "^4.3.5",
     "typescript": "^7.0.2",
     "vitest": "^5.1.1"
-  },
-  "peerDependencies": {
-    "@anthropic-ai/sdk": "^1.10.0",
-    "@google/genai": "^3.6.1",
-    "openai": "^7.60.0"
-  },
-  "peerDependenciesMeta": {
-    "@anthropic-ai/sdk": {
-      "optional": true
-    },
-    "@google/genai": {
-      "optional": true
-    },
-    "openai": {
-      "optional": true
-    }
   },
   "description": "Rebuild a photo of a paper document as a clean PDF with real text, tables and boxes, using Claude, OpenAI or Gemini with your own API key.",
   "license": "MIT",
@@ -82,5 +63,11 @@
     "dist",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.106",
+    "@ai-sdk/google": "^4.0.122",
+    "@ai-sdk/openai": "^4.0.121",
+    "ai": "^7.0.177"
+  }
 }

@@ -27,16 +27,8 @@ medical or legal documents.
 npm install @piro0919/image-to-pdf
 ```
 
-Then install the SDK of each provider you use. They are optional peer dependencies, so
-you only get the ones you need:
-
-```sh
-npm install @anthropic-ai/sdk # Claude
-npm install openai            # OpenAI
-npm install @google/genai     # Gemini
-```
-
-If you pass your own `client` (see below), this package never imports the SDK itself.
+Requests go through the [AI SDK](https://ai-sdk.dev), which comes with the package. In the
+browser only the provider you use is downloaded.
 
 ## Browser
 
@@ -52,23 +44,27 @@ const { html, unclear, usage } = await rebuild(file, {
 await openPrint(html); // opens the print dialog; choose "Save as PDF"
 ```
 
+`model` suggests the model IDs the AI SDK provider package knows, and any other string is
+accepted, so new models work before this package is updated.
+
 The browser calls the provider directly, so the key never passes through a server of
 yours. Anyone who can open the page's developer tools can see the key, so only use keys
 that belong to the person using the page.
 
-To use your own key from the browser without exposing it, send the request through your
-server by passing a client whose `baseURL` points there:
+## Your own model
+
+Instead of `provider` and `apiKey`, pass any AI SDK model as `model`. Use this to keep
+your own key on your server behind a proxy:
 
 ```ts
-import OpenAI from "openai";
+import { createOpenAI } from "@ai-sdk/openai";
 
-const client = new OpenAI({
-  baseURL: "/api/openai", // your proxy adds the key
-  apiKey: "unused",
-  dangerouslyAllowBrowser: true,
-});
-const { html } = await rebuild(file, { provider: "openai", client });
+const openai = createOpenAI({ baseURL: "/api/openai", apiKey: "unused" }); // your proxy adds the key
+const { html } = await rebuild(file, { model: openai.responses("gpt-6.2-sol") });
 ```
+
+The same works for any provider the AI SDK supports, or a gateway ID string such as
+`"openai/gpt-6.2-sol"`. Only Claude, OpenAI and Gemini have been tried with this package.
 
 ## Node
 
@@ -76,13 +72,13 @@ const { html } = await rebuild(file, { provider: "openai", client });
 import { readFile } from "node:fs/promises";
 import { rebuild, writePdf } from "@piro0919/image-to-pdf/node";
 
-// apiKey can be left out: the SDK reads ANTHROPIC_API_KEY
+// apiKey can be left out: it is read from ANTHROPIC_API_KEY
 const result = await rebuild(await readFile("photo.jpg"), { provider: "anthropic" });
 await writePdf(result.html, "out.pdf");
 ```
 
-Each SDK reads its usual variable: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or
-`GEMINI_API_KEY` / `GOOGLE_API_KEY`.
+The variables are `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and
+`GOOGLE_GENERATIVE_AI_API_KEY`.
 
 `writePdf` needs Chrome, Chromium or Edge installed. Set `CHROME_PATH` or pass
 `{ chromePath }` if it is not found.
@@ -96,12 +92,10 @@ Each SDK reads its usual variable: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or
   on Amazon Bedrock) are scaled down and re-encoded as JPEG in the browser; in Node they
   are rejected, so resize them first
 - `options.provider`: `"anthropic"`, `"openai"` or `"google"`
-- `options.apiKey`: optional. API key for that provider. In Node, the SDK falls back to
-  its environment variable. Ignored when `client` is given
-- `options.client`: optional. An SDK client you built yourself (`new Anthropic()`,
-  `new OpenAI()`, `new GoogleGenAI()`), for a proxy `baseURL`, a custom `fetch` and so
-  on. Its settings are used as they are
-- `options.model`: optional. Defaults to `DEFAULT_MODELS[provider]`
+- `options.apiKey`: optional. API key for that provider. In Node it falls back to the
+  environment variable
+- `options.model`: optional. With `provider`, a model ID (defaults to
+  `DEFAULT_MODELS[provider]`). Without `provider`, an AI SDK model
 - `options.signal`: optional `AbortSignal`
 
 Returns `{ html, unclear, usage: { inputTokens, outputTokens }, model }`. `model` is the

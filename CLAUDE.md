@@ -45,9 +45,16 @@ The full discussion is in
     and `x-goog-api-key`. A real keyed call from a browser has not been made yet
 - **Users bring their own API key.** On the landing page the key is entered by the user and
   never paid for by us — no rate limiting or billing to build. The intent is for the
-  browser to call the provider directly so the key never passes through our server. The
-  Anthropic and OpenAI SDKs need `dangerouslyAllowBrowser: true`, which `src/providers.ts`
-  sets. See "Checked so far" below for what has been tried
+  browser to call the provider directly so the key never passes through our server.
+  Anthropic needs the `anthropic-dangerous-direct-browser-access: true` header for that,
+  which `src/providers.ts` sets. See "Checked so far" below for what has been tried
+- **Requests go through Vercel's AI SDK** (`ai` and `@ai-sdk/anthropic|openai|google`),
+  not the providers' own SDKs. Switched on 2026-11-20 so the `model` type follows the
+  provider packages: the owner wanted model IDs typed and kept current without updating
+  this package ("型を効かせたい", then "まかせる"). The official SDKs type Claude and OpenAI
+  model IDs but Gemini's has only `string`; the AI SDK packages have all three, as
+  `known IDs | (string & {})`, read off `languageModel` / `responses` parameters because
+  the ID types are not exported by name
 - **PDF output goes through HTML and the browser's print-to-PDF.** The model's result
   becomes HTML; the browser handles text shaping and direction for every script
   - Checked with headless Chrome on 2026-11-20: Arabic joined and ran right-to-left, an
@@ -98,12 +105,14 @@ Implemented in `src/`. Names (`rebuild`, `openPrint`, `writePdf`) and the defaul
 were left to Claude by the owner ("すべてまかせる").
 
 - One call takes a photo (`File` / `Blob` in the browser, `Uint8Array` in Node) and
-  `{ provider, model?, apiKey?, client? }`, and returns `{ html, unclear, usage }`
-  - `client` (added 2026-11-20 at the owner's request, "対応を"): the caller's own SDK
-    instance, so a proxy `baseURL` or custom `fetch` works and an app can keep its own
-    key off the browser. Typed by shape (`AnthropicClient` etc.), not by the SDK types,
-    so the published `.d.ts` does not need SDKs the consumer has not installed
-  - `apiKey` is optional because each SDK falls back to its environment variable in Node
+  either `{ provider, model?, apiKey? }` or `{ model }` with an AI SDK model, and returns
+  `{ html, unclear, usage, model }`
+  - `{ model }` replaces the `client` option that briefly took the official SDK clients
+    (asked for with "対応を"): a proxy `baseURL`, Bedrock, Azure or a gateway ID all
+    become an AI SDK model. Only Claude, OpenAI and Gemini have been tried
+  - `apiKey` is optional because each provider package falls back to its environment
+    variable in Node (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`,
+    `GOOGLE_GENERATIVE_AI_API_KEY`)
   - `html`: a complete A4-printable document, the model's output used as is
   - `unclear`: how many spots the model marked with `<mark class="unclear">`
   - `usage`: input and output tokens, for showing the cost
@@ -115,20 +124,30 @@ were left to Claude by the owner ("すべてまかせる").
     local headless Chrome, as the spike does
 - Default models are the upper tier of each provider (`DEFAULT_MODELS` in
   `src/providers.ts`), because `gpt-6-luna` misread text without marking it
-- SDKs are loaded with dynamic `import()` so a browser bundle only fetches the provider
-  in use. With esbuild code splitting each provider's chunk is about 1 MB unminified
-  (measured 2026-11-20)
-- The three SDKs are optional `peerDependencies` (also in `devDependencies` for the
-  spike and the landing page). Without one installed, `rebuild` with only `apiKey` throws
-  "Install … or pass your own client"; with `client` the SDK is never imported. Checked
-  2026-11-20 from a packed tarball in a project with no SDKs: types pass under
-  `nodenext` with `skipLibCheck: false`, a passed client works
+- `ai` and the provider packages are loaded with dynamic `import()` so a browser bundle
+  only fetches the provider in use. They are plain `dependencies`: the `.d.ts` imports
+  their types, so they must be installed
+- Anthropic's server-side fallback is turned on with the AI SDK option
+  `providerOptions.anthropic.fallbacks: "default"` (the package adds the beta header);
+  the model it handed to comes back as a `custom` content part `anthropic.fallback`
+- Checked 2026-11-20 from a packed tarball in an empty project: types pass under
+  `nodenext` and `bundler` with `skipLibCheck: true`. With `skipLibCheck: false` the one
+  error is inside `@ai-sdk/provider` (no types for `json-schema`), which any AI SDK user
+  gets
 
 ### Checked so far (2026-11-20)
 
 - Browser → OpenAI with a real key: works. Bundled `dist/` with esbuild, served on
   localhost, called `rebuild()` from Playwright's Chromium. Anthropic and Gemini have
-  not been called from a browser (no keys yet)
+  not been called from a browser with a real key (no keys yet)
+  - After the switch to the AI SDK: the landing page read `ja-referral.png` with
+    `gpt-6.2-sol` (3,259 input tokens, the same as before, so `imageDetail: "high"`
+    reaches OpenAI), and `pnpm spike` read it in Node with `gpt-6-luna`. The page loads
+    only the OpenAI provider's code when OpenAI is used
+  - A wrong key: OpenAI's 401 has no `access-control-allow-origin`, so the browser only
+    sees "Failed to fetch"; the landing page turns that into "Check the API key and your
+    connection". Anthropic (with the direct-browser header) and Gemini send CORS headers
+    on errors, and the page shows Anthropic's own "invalid x-api-key"
 - `openPrint()`: in Playwright's Chromium no dialog appears and `afterprint` never fires.
   It resolves when `print()` returns and removes the frame on `afterprint` or on the next
   call, never on a timer, so a slow user cannot end up printing an emptied frame.

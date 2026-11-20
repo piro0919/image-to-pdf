@@ -1,38 +1,33 @@
+import type { LanguageModel } from "ai";
 import { cleanHtml, countUnclear } from "./html.js";
 import { encodePhoto, type Photo } from "./image.js";
-import { callProvider, DEFAULT_MODELS, type Provider, type ProviderClients, type Usage } from "./providers.js";
+import { callModel, DEFAULT_MODELS, type ModelIds, type Provider, providerModel, type Usage } from "./providers.js";
 
 export { openPrint } from "./print.js";
-export {
-  type AnthropicClient,
-  DEFAULT_MODELS,
-  type GoogleClient,
-  type OpenAIClient,
-  type Provider,
-  type ProviderClients,
-  RebuildError,
-  type Usage,
-} from "./providers.js";
+export { DEFAULT_MODELS, type ModelIds, type Provider, RebuildError, type Usage } from "./providers.js";
 export type { Photo } from "./image.js";
 
-type OptionsFor<P extends Provider> = {
+type ProviderOptions<P extends Provider> = {
   provider: P;
-  /**
-   * API key for that provider. Ignored when `client` is given. In Node it can be left out
-   * and the SDK reads its usual environment variable.
-   */
+  /** API key for that provider. In Node it can be left out and the provider reads its usual environment variable. */
   apiKey?: string;
-  /**
-   * An SDK client you built yourself (`new Anthropic()`, `new OpenAI()`, `new GoogleGenAI()`),
-   * for a proxy `baseURL`, a custom `fetch` and so on. Its options are used as they are.
-   */
-  client?: ProviderClients[P];
-  /** Defaults to DEFAULT_MODELS[provider]. */
-  model?: string;
+  /** Defaults to DEFAULT_MODELS[provider]. Suggestions come from the provider package. */
+  model?: ModelIds[P];
   signal?: AbortSignal;
 };
 
-export type RebuildOptions = { [P in Provider]: OptionsFor<P> }[Provider];
+type ModelOptions = {
+  /**
+   * An AI SDK model you built yourself, e.g. `createOpenAI({ baseURL })("gpt-6.2-sol")`, a
+   * Bedrock or Azure model, or a gateway ID string such as `"openai/gpt-6.2-sol"`.
+   */
+  model: LanguageModel;
+  provider?: never;
+  apiKey?: never;
+  signal?: AbortSignal;
+};
+
+export type RebuildOptions = { [P in Provider]: ProviderOptions<P> }[Provider] | ModelOptions;
 
 export type RebuildResult = {
   /** A complete HTML document, sized for A4. */
@@ -47,12 +42,11 @@ export type RebuildResult = {
 /** Reads a photo of a paper document and rebuilds it as printable HTML. */
 export async function rebuild(photo: Photo, options: RebuildOptions): Promise<RebuildResult> {
   const image = await encodePhoto(photo);
-  const { text, usage, model } = await callProvider(options.provider, image, {
-    model: options.model ?? DEFAULT_MODELS[options.provider],
-    apiKey: options.apiKey,
-    client: options.client,
-    signal: options.signal,
-  });
+  const model =
+    options.provider === undefined
+      ? options.model
+      : await providerModel(options.provider, options.model ?? DEFAULT_MODELS[options.provider], options.apiKey);
+  const { text, usage, model: wrote } = await callModel(model, image, options.signal);
   const html = cleanHtml(text);
-  return { html, unclear: countUnclear(html), usage, model };
+  return { html, unclear: countUnclear(html), usage, model: wrote };
 }

@@ -21,6 +21,18 @@ const MODELS: Record<Provider, string[]> = {
   google: ["gemini-3.8-flash", "gemini-3.5-flash-lite"],
 };
 
+// 返事を読めなかった失敗は、ブラウザが fetch の TypeError で知らせる（"Failed to fetch" など）
+// OpenAI はキーが違うときの 401 に CORS の許可を付けないので、理由がこれになる（2026-11-20 に curl で確認）
+function describeError(cause: unknown, label: string): string {
+  for (let e = cause; e instanceof Error; e = e.cause) {
+    // Chrome は "Failed to fetch"、Firefox は "NetworkError …"、Safari は "Load failed"
+    if (e instanceof TypeError && /fetch|network|load failed/i.test(e.message)) {
+      return `Could not get an answer from ${label}. Check the API key and your connection.`;
+    }
+  }
+  return cause instanceof Error ? cause.message : String(cause);
+}
+
 function Band<T extends string>({
   label,
   onChange,
@@ -79,7 +91,7 @@ export default function RebuildForm() {
         await rebuild(photo, { provider, model, apiKey: apiKey.trim() }),
       );
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause));
+      setError(describeError(cause, label));
     } finally {
       setRunning(false);
     }

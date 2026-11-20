@@ -1,8 +1,5 @@
 import RebuildForm from "./_components/rebuild-form";
 
-const INSTALL = `npm i @piro0919/image-to-pdf
-npm i openai # or @anthropic-ai/sdk, @google/genai — only the ones you use`;
-
 const USAGE = `import { openPrint, rebuild } from "@piro0919/image-to-pdf";
 
 const { html, unclear, usage } = await rebuild(file, {
@@ -13,16 +10,12 @@ const { html, unclear, usage } = await rebuild(file, {
 
 await openPrint(html); // opens the print dialog; choose "Save as PDF"`;
 
-const CLIENT = `import OpenAI from "openai";
+const OWN_MODEL = `import { createOpenAI } from "@ai-sdk/openai";
 
-// Your own key stays on your server: point the SDK at your proxy
-const client = new OpenAI({
-  baseURL: "/api/openai",
-  apiKey: "unused",
-  dangerouslyAllowBrowser: true,
-});
+// Your own key stays on your server: point the provider at your proxy
+const openai = createOpenAI({ baseURL: "/api/openai", apiKey: "unused" });
 
-const { html } = await rebuild(file, { provider: "openai", client });`;
+const { html } = await rebuild(file, { model: openai.responses("gpt-6.2-sol") });`;
 
 function Code({ children }: { children: string }) {
   return (
@@ -60,9 +53,8 @@ export default function Home() {
             Use it in your own app
           </h2>
           <div className="mt-6 space-y-8">
-            <Code>{INSTALL}</Code>
             <Code>{USAGE}</Code>
-            <Code>{CLIENT}</Code>
+            <Code>{OWN_MODEL}</Code>
           </div>
         </section>
 
