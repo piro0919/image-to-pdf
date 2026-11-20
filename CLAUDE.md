@@ -194,3 +194,12 @@ were left to Claude by the owner ("すべてまかせる").
 - Public repo: README, CLAUDE.md, docs, package.json description and commits in English.
   Code comments may be Japanese
 - Commits: Conventional Commits, `type(scope): lowercase description`. Push to main
+- Tooling copied on 2026-11-20 from the owner's other repos (magao as the model): ESLint
+  with `@piro0919/eslint-config` (magic numbers and Tailwind arbitrary values fail; name
+  the value or add a `@theme` token), Prettier, lefthook with commitlint, secretlint, knip,
+  Renovate, `.nvmrc` and a CI workflow running the same checks
+- TypeScript runs side by side, as the TypeScript 7.0 announcement describes:
+  `typescript` is aliased to `@typescript/typescript6` because typescript-eslint stops
+  with "does not support TS 7.0", and `@typescript/native` is TypeScript 7, which owns
+  the `tsc` binary used by `typecheck` and `build:lib`. Drop the alias once
+  typescript-eslint supports TypeScript 7

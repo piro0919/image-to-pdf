@@ -9,7 +9,7 @@ export type Photo = Blob | ArrayBuffer | ArrayBufferView;
 const MAX_BASE64_MB = 5;
 const BYTES_PER_KB = 1024;
 const BYTES_PER_MB = BYTES_PER_KB * BYTES_PER_KB;
-export const MAX_BASE64_BYTES = MAX_BASE64_MB * BYTES_PER_MB;
+const MAX_BASE64_BYTES = MAX_BASE64_MB * BYTES_PER_MB;
 
 // 形式ごとの先頭のバイト。1文字が1バイトに当たるように \x で書く
 const PNG_SIGNATURE = '\x89PNG';
