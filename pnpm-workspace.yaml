@@ -1,3 +1,4 @@
 # protobufjs の postinstall は、依存の版の書き方を警告するだけなので走らせない
 allowBuilds:
+  lefthook: true
   protobufjs: false

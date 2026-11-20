@@ -1,0 +1,27 @@
+import { defineConfig, globalIgnores } from 'eslint/config';
+import nextVitals from 'eslint-config-next/core-web-vitals';
+import nextTs from 'eslint-config-next/typescript';
+import prettier from 'eslint-config-prettier';
+import magicNumbers from '@piro0919/eslint-config';
+import tailwind from '@piro0919/eslint-config/tailwind';
+import hollowTests from 'eslint-plugin-hollow-tests';
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  prettier,
+  ...tailwind({
+    cssConfigPath: 'src/app/globals.css',
+    files: ['src/app/**/*.{ts,tsx}'],
+    level: 'error',
+  }),
+  ...magicNumbers({ files: ['src/**/*.{ts,tsx}'], level: 'error' }),
+  {
+    files: ['test/**/*.ts'],
+    plugins: { 'hollow-tests': hollowTests },
+    rules: hollowTests.configs?.recommended?.rules ?? {},
+  },
+  globalIgnores(['.next/**', 'dist/**', 'next-env.d.ts', 'spike/out/**']),
+]);
+
+export default eslintConfig;

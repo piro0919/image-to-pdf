@@ -150,7 +150,7 @@ export default function RebuildForm() {
 
       <div className="flex flex-wrap items-center gap-4">
         <button
-          className="rounded-lg bg-sky-400 px-5 py-2.5 text-sm font-medium text-[#0d0f12] transition-colors hover:bg-sky-300 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
+          className="rounded-lg bg-sky-400 px-5 py-2.5 text-sm font-medium text-page transition-colors hover:bg-sky-300 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
           disabled={!photo || !apiKey.trim() || running}
           onClick={run}
           type="button"

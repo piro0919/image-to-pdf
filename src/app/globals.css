@@ -5,3 +5,10 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
+
+@theme {
+  --color-page: #0d0f12;
+  --color-surface: #11151a;
+  --text-code: 13px;
+  --tracking-label: 0.2em;
+}

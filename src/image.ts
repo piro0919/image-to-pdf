@@ -6,17 +6,28 @@ export type Photo = Blob | ArrayBuffer | ArrayBufferView;
 
 // Anthropic の上限は画像1枚 base64 で 10MB（自社 API）、Amazon Bedrock 経由なら 5MB。
 // 確かめた中で最も厳しい 5MB に合わせる
-export const MAX_BASE64_BYTES = 5 * 1024 * 1024;
+const MAX_BASE64_MB = 5;
+const BYTES_PER_KB = 1024;
+const BYTES_PER_MB = BYTES_PER_KB * BYTES_PER_KB;
+export const MAX_BASE64_BYTES = MAX_BASE64_MB * BYTES_PER_MB;
+
+// 形式ごとの先頭のバイト。1文字が1バイトに当たるように \x で書く
+const PNG_SIGNATURE = "\x89PNG";
+const JPEG_SIGNATURE = "\xff\xd8\xff";
+const GIF_SIGNATURE = "GIF8";
+const RIFF_SIGNATURE = "RIFF";
+const WEBP_FOURCC = "WEBP";
+// RIFF の入れ物は、先頭4バイトの印と4バイトの長さの後に、中身の種類（WEBP など）が来る
+const RIFF_FOURCC_OFFSET = 8;
 
 // 中身の先頭のバイトで形式を見分ける。ファイル名や Blob.type は当てにしない
 export function detectMediaType(bytes: Uint8Array): MediaType {
-  const starts = (...sig: number[]) => sig.every((b, i) => bytes[i] === b);
-  if (starts(0x89, 0x50, 0x4e, 0x47)) return "image/png";
-  if (starts(0xff, 0xd8, 0xff)) return "image/jpeg";
-  if (starts(0x47, 0x49, 0x46, 0x38)) return "image/gif";
-  if (starts(0x52, 0x49, 0x46, 0x46) && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) {
-    return "image/webp";
-  }
+  const has = (signature: string, offset = 0) =>
+    [...signature].every((char, i) => bytes[offset + i] === char.charCodeAt(0));
+  if (has(PNG_SIGNATURE)) return "image/png";
+  if (has(JPEG_SIGNATURE)) return "image/jpeg";
+  if (has(GIF_SIGNATURE)) return "image/gif";
+  if (has(RIFF_SIGNATURE) && has(WEBP_FOURCC, RIFF_FOURCC_OFFSET)) return "image/webp";
   throw new Error("Unsupported image format. Use PNG, JPEG, WebP or GIF.");
 }
 
@@ -30,7 +41,16 @@ export function toBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-const base64Length = (byteLength: number) => Math.ceil(byteLength / 3) * 4;
+// base64 は 3 バイトを 4 文字にする
+const BASE64_INPUT_BYTES = 3;
+const BASE64_OUTPUT_CHARS = 4;
+const base64Length = (byteLength: number) =>
+  Math.ceil(byteLength / BASE64_INPUT_BYTES) * BASE64_OUTPUT_CHARS;
+
+// 縮めるときに試す長い辺の長さ。大きい順に試し、上限に収まった最初のものを使う
+// eslint-disable-next-line @typescript-eslint/no-magic-numbers -- 試す寸法の表
+const SHRINK_LONG_EDGES = [3000, 2400, 2000, 1600];
+const JPEG_QUALITY = 0.9;
 
 // 別の realm（iframe・worker）から来た値でも見分けられるよう instanceof を使わない
 async function toBytes(photo: Photo): Promise<Uint8Array> {
@@ -44,16 +64,16 @@ async function toBytes(photo: Photo): Promise<Uint8Array> {
 async function shrink(bytes: Uint8Array, mediaType: MediaType): Promise<Uint8Array> {
   if (typeof createImageBitmap !== "function" || typeof OffscreenCanvas !== "function") {
     throw new Error(
-      `The photo is too large (${(bytes.length / 1024 / 1024).toFixed(1)} MB). Resize it so its base64 form is under 5 MB.`,
+      `The photo is too large (${(bytes.length / BYTES_PER_MB).toFixed(1)} MB). Resize it so its base64 form is under ${MAX_BASE64_MB} MB.`,
     );
   }
   const bitmap = await createImageBitmap(new Blob([bytes as Uint8Array<ArrayBuffer>], { type: mediaType }));
   try {
-    for (const longEdge of [3000, 2400, 2000, 1600]) {
+    for (const longEdge of SHRINK_LONG_EDGES) {
       const scale = Math.min(1, longEdge / Math.max(bitmap.width, bitmap.height));
       const canvas = new OffscreenCanvas(Math.round(bitmap.width * scale), Math.round(bitmap.height * scale));
       canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-      const blob = await canvas.convertToBlob({ type: "image/jpeg", quality: 0.9 });
+      const blob = await canvas.convertToBlob({ type: "image/jpeg", quality: JPEG_QUALITY });
       if (base64Length(blob.size) <= MAX_BASE64_BYTES) return new Uint8Array(await blob.arrayBuffer());
     }
   } finally {

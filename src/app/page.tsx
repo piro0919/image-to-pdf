@@ -19,7 +19,7 @@ const { html } = await rebuild(file, { model: openai.responses("gpt-6.2-sol") })
 
 function Code({ children }: { children: string }) {
   return (
-    <pre className="overflow-x-auto rounded-xl border border-white/10 bg-[#11151a] p-5 font-mono text-[13px] leading-relaxed text-zinc-300">
+    <pre className="overflow-x-auto rounded-xl border border-white/10 bg-surface p-5 font-mono text-code leading-relaxed text-zinc-300">
       <code>{children}</code>
     </pre>
   );
@@ -27,10 +27,10 @@ function Code({ children }: { children: string }) {
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#0d0f12] text-zinc-200">
+    <div className="min-h-screen bg-page text-zinc-200">
       <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
         <header>
-          <p className="font-mono text-xs tracking-[0.2em] text-sky-400/80 uppercase">
+          <p className="font-mono text-xs tracking-label text-sky-400/80 uppercase">
             npm i @piro0919/image-to-pdf
           </p>
           <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
