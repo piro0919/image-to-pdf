@@ -7,7 +7,7 @@ original. It is not the photo pasted into a PDF.
 Printed and handwritten text, in any language. Works with Claude, OpenAI or Gemini, using
 your own API key.
 
-> Status: early. Not published to npm yet.
+> Status: early (0.x). The API may still change between minor versions.
 
 ## How it works
 
