@@ -1,0 +1,15 @@
+<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="108" fill="#0d0f12"/>
+  <!-- the photo: tilted, and only outlined -->
+  <g transform="rotate(-12 200 230)">
+    <rect x="88" y="118" width="210" height="250" rx="18" fill="none" stroke="#3f3f46" stroke-width="14"/>
+    <circle cx="150" cy="180" r="20" fill="#3f3f46"/>
+    <path d="M104 340 L170 260 L215 305 L245 275 L285 340 Z" fill="#3f3f46"/>
+  </g>
+  <!-- the page rebuilt from it: straight, with text and a table -->
+  <rect x="222" y="150" width="210" height="270" rx="18" fill="#38bdf8"/>
+  <rect x="254" y="190" width="146" height="18" rx="9" fill="#0d0f12"/>
+  <rect x="254" y="232" width="110" height="14" rx="7" fill="#0d0f12"/>
+  <rect x="254" y="270" width="146" height="90" rx="6" fill="none" stroke="#0d0f12" stroke-width="10"/>
+  <path d="M254 315 H400 M327 270 V360" stroke="#0d0f12" stroke-width="10"/>
+</svg>
