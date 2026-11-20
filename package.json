@@ -1,6 +1,6 @@
 {
   "name": "@piro0919/image-to-pdf",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "pnpm build:lib && next dev",
