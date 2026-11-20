@@ -1,0 +1,68 @@
+<!doctype html>
+<!-- 架空の書類。人名・病院名・数値はすべて作り話。手書き部分は手書き風フォントで代用している -->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Yomogi&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #6b6b66; }
+  .scene { width: 1400px; height: 1800px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .paper {
+    width: 1050px; padding: 70px 80px; background: #fbf8f1;
+    font-family: "Noto Serif JP", serif; color: #1c1c1c; font-size: 22px;
+    transform: rotate(-2.2deg) skewX(0.8deg);
+    box-shadow: 0 30px 60px rgba(0,0,0,.45);
+    filter: contrast(0.92) brightness(0.97);
+    background-image: linear-gradient(115deg, rgba(0,0,0,0) 55%, rgba(0,0,0,.07) 100%);
+  }
+  h1 { text-align: center; font-size: 36px; letter-spacing: .5em; margin: 0 0 30px; }
+  .meta { display: flex; justify-content: space-between; margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 22px; }
+  th, td { border: 1.5px solid #222; padding: 10px 12px; text-align: left; vertical-align: top; }
+  th { width: 22%; background: #eeeae0; font-weight: 700; }
+  .hand { font-family: "Yomogi", cursive; color: #1d2c6b; font-size: 27px; }
+  .box { border: 1.5px solid #222; padding: 14px 16px; min-height: 120px; margin-bottom: 22px; }
+  .box .label { font-weight: 700; margin-bottom: 6px; }
+  .check { display: inline-block; margin-right: 26px; }
+  .sign { display: flex; justify-content: flex-end; gap: 30px; align-items: baseline; margin-top: 30px; }
+  .stamp { width: 70px; height: 70px; border: 3px solid #c0392b; border-radius: 50%; color: #c0392b; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; transform: rotate(8deg); }
+</style>
+</head>
+<body>
+<div class="scene"><div class="paper">
+  <h1>診療情報提供書</h1>
+  <div class="meta">
+    <div>みどり台訪問看護ステーション 御中</div>
+    <div>令和8年 <span class="hand">11</span> 月 <span class="hand">14</span> 日</div>
+  </div>
+  <table>
+    <tr><th>患者氏名</th><td><span class="hand">山崎 はる江</span> 様</td><th>性別</th><td><span class="hand">女</span></td></tr>
+    <tr><th>生年月日</th><td>昭和 <span class="hand">13</span> 年 <span class="hand">4</span> 月 <span class="hand">2</span> 日</td><th>年齢</th><td><span class="hand">88</span> 歳</td></tr>
+    <tr><th>傷病名</th><td colspan="3"><span class="hand">慢性心不全、2型糖尿病、腰部脊柱管狭窄症</span></td></tr>
+  </table>
+  <div class="box">
+    <div class="label">紹介目的</div>
+    <span class="check">☑ 在宅療養の継続</span><span class="check">☐ 精査</span><span class="check">☐ 入院</span>
+  </div>
+  <div class="box">
+    <div class="label">現在の処方</div>
+    <div class="hand">フロセミド 20mg 1錠 朝食後<br>メトホルミン 250mg 2錠 朝夕食後<br>ロキソプロフェン 60mg 頓用（腰痛時）</div>
+  </div>
+  <table>
+    <tr><th>測定日</th><th>体重 (kg)</th><th>血圧 (mmHg)</th><th>HbA1c (%)</th></tr>
+    <tr><td>10/03</td><td class="hand">46.2</td><td class="hand">138/76</td><td class="hand">7.4</td></tr>
+    <tr><td>10/31</td><td class="hand">47.5</td><td class="hand">142/80</td><td class="hand">7.1</td></tr>
+  </table>
+  <div class="box">
+    <div class="label">留意事項</div>
+    <div class="hand">体重が1週間で2kg以上増えたら連絡をお願いします。<br>下肢のむくみ、息切れに注意。夜間のトイレ回数が多いです。</div>
+  </div>
+  <div class="sign">
+    <div>あおば内科クリニック　医師</div>
+    <div class="hand" style="font-size:32px">田之上 修</div>
+    <div class="stamp">田之上</div>
+  </div>
+</div></div>
+</body>
+</html>

@@ -34,7 +34,14 @@ No code yet. The full discussion is in
     positions, and its layout classes (`src/config/ndl.yaml`) mark a `block_table` region
     but have no notion of cells. Its layout backbone is distilled from DINOv3, so
     redistributing its models also binds you to the DINOv3 licence
-- **Claude is the model.** Call it so the provider can be swapped later
+- **Claude, OpenAI and Gemini are all supported** (decided 2026-11-20, widened from
+  Claude only). Users bring their own key, so supporting the main providers lets people
+  use the key they already have. Accuracy has to be measured per provider
+  - CORS preflight (`OPTIONS` with an `Origin`) was checked on 2026-11-20 against
+    `api.anthropic.com/v1/messages`, `api.openai.com/v1/responses` and
+    `/v1/chat/completions`, and Gemini `generateContent`: all allowed. Gemini returned 403
+    when the request listed other providers' headers, and passed with only `content-type`
+    and `x-goog-api-key`. A real keyed call from a browser has not been made yet
 - **Users bring their own API key.** On the landing page the key is entered by the user and
   never paid for by us — no rate limiting or billing to build. The intent is for the
   browser to call Anthropic directly so the key never passes through our server. The SDK
@@ -73,7 +80,10 @@ Users pay this, not us, but it matters for which model to default to.
 - Accuracy. Not measured for any language. Needs sample photos with printed and handwritten
   text mixed; real documents are personal data, so the samples have to be made up.
   Anthropic's per-language scores measure text understanding, not reading handwriting
-- Default model (Sonnet 5.5 vs Haiku 5.5)
+- Default provider and model. The spike (`spike/`, `pnpm spike <image> [model...]`)
+  compares Claude Sonnet 5.5 / Haiku 5.5, OpenAI `gpt-6.2-sol` / `gpt-6-luna`, and Gemini
+  `gemini-3.8-flash` / `gemini-3.5-flash-lite`. Prices are in `spike/providers.ts`.
+  Whether the two OpenAI models accept images was not stated on OpenAI's pricing page
 - Package API shape, and how the landing page is built and hosted
 - Competitors for the rebuild approach were only searched lightly. Several "image to Word"
   tools exist and some claim to rebuild tables (imagetotable.ai), untested. No tool for
